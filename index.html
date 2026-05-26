@@ -28,6 +28,129 @@
             transition: background-color 0.3s ease;
         }
         .btn:hover { background-color: gray; }
+
+        /* ── 로그인 버튼 (우측 상단) ── */
+        #auth-area {
+            position: fixed;
+            top: 18px;
+            right: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 999;
+        }
+        #user-label {
+            font-size: 14px;
+            color: #555;
+            font-weight: bold;
+        }
+        #login-btn, #logout-btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        #login-btn {
+            background-color: gray;
+            color: white;
+        }
+        #login-btn:hover { background-color: black; }
+        #logout-btn {
+            background-color: #eee;
+            color: #333;
+        }
+        #logout-btn:hover { background-color: #ddd; }
+
+        /* ── 로그인 모달 오버레이 ── */
+        #login-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        #login-overlay.show { display: flex; }
+        #login-modal {
+            background: white;
+            border-radius: 16px;
+            padding: 36px 40px;
+            width: 340px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+            position: relative;
+            animation: modalIn 0.22s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes modalIn {
+            from { transform: scale(0.85); opacity: 0; }
+            to   { transform: scale(1);    opacity: 1; }
+        }
+        #login-modal h2 {
+            margin: 0 0 6px 0;
+            font-size: 22px;
+            color: #222;
+        }
+        #login-modal .modal-sub {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 24px;
+        }
+        .modal-field {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 14px;
+        }
+        .modal-field label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .modal-field input {
+            padding: 10px 14px;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .modal-field input:focus { border-color: #6c5ce7; }
+        #login-error {
+            color: #e53935;
+            font-size: 13px;
+            margin: -6px 0 10px 0;
+            min-height: 18px;
+        }
+        #modal-login-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #6c5ce7;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #modal-login-btn:hover { background-color: #5a4bd1; }
+        #close-modal {
+            position: absolute;
+            top: 14px; right: 18px;
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #aaa;
+            cursor: pointer;
+            line-height: 1;
+        }
+        #close-modal:hover { color: #333; }
+
         #main-content {
             margin-top: 20px;
             padding: 20px;
@@ -127,6 +250,30 @@
             line-height: 1.6;
         }
         .submission-desc b { color: #6c5ce7; }
+
+        /* 로그인 필요 안내 박스 */
+        .login-required-box {
+            background: #fff8f0;
+            border: 1.5px dashed #f0a500;
+            border-radius: 12px;
+            padding: 28px 20px;
+            text-align: center;
+            color: #7a5000;
+        }
+        .login-required-box .lock-icon { font-size: 36px; margin-bottom: 10px; }
+        .login-required-box p { margin: 0 0 16px 0; font-size: 15px; }
+        .login-required-box button {
+            padding: 10px 28px;
+            background-color: #6c5ce7;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .login-required-box button:hover { background-color: #5a4bd1; }
+
         .output-label {
             font-weight: bold;
             font-size: 14px;
@@ -194,162 +341,330 @@
 </head>
 <body>
     <img id="logo" width="105" height="105" src="https://i.postimg.cc/kMfxNKWm/inisyeol-E.png">
-    <button class="btn">문제</button>
+    <button class="btn" id="problem-btn">문제</button>
+    <button class="btn" id="status-btn">채점현황</button>
+
+    <!-- 우측 상단 인증 영역 -->
+    <div id="auth-area">
+        <span id="user-label"></span>
+        <button id="login-btn" onclick="openLoginModal()">로그인</button>
+        <button id="logout-btn" style="display:none" onclick="logout()">로그아웃</button>
+    </div>
+
+    <!-- 로그인 모달 -->
+    <div id="login-overlay">
+        <div id="login-modal">
+            <button id="close-modal" onclick="closeLoginModal()">✕</button>
+            <h2>🔐 로그인</h2>
+            <p class="modal-sub">2than OJ 계정으로 로그인하세요</p>
+            <div class="modal-field">
+                <label>아이디</label>
+                <input type="text" id="login-id" placeholder="아이디 입력" autocomplete="username">
+            </div>
+            <div class="modal-field">
+                <label>비밀번호</label>
+                <input type="password" id="login-pw" placeholder="비밀번호 입력" autocomplete="current-password">
+            </div>
+            <p id="login-error"></p>
+            <button id="modal-login-btn" onclick="tryLogin()">로그인</button>
+        </div>
+    </div>
+
     <div id="main-content">
         <h2>로딩 중...</h2>
         <p>잠시만 기다려 주세요!</p>
     </div>
 
     <script>
+    const ADMIN_PASSWORD = "ethan1205";
+    // ══════════════════════════════════════════
+    //  ★ 계정 목록 — 여기서 직접 수정하세요 ★
+    // ══════════════════════════════════════════
+    const ACCOUNTS = [
+        { id: 'admin',pw: 'ethan1205!'   },
+        { id: '김민종', pw: '30808' },
+        { id: '박하준', pw: '30615' },
+        { id: '정준우', pw: '30525' },
+        { id: '박시완', pw: '30609' },
+        { id: '신지섭', pw: '30616' },
+        { id: '최지혁', pw: '20733' },
+        { id: '채유승', pw: '20132' },
+        { id: '전하성', pw: '30430' },
+        { id: '한정우', pw: '30130' },
+        { id: '이주원', pw: '10321' },
+        { id: '김다함', pw: '30403' },
+        { id: '김의찬', pw: '21011' },
+        { id: '박관률', pw: '30109' },
+        // 필요한 만큼 추가하면 됩니다
+        // { id: 'newuser', pw: 'newpass' },
+    ];
+    // ══════════════════════════════════════════
+    function checkAdminPassword() {
+        const pw = prompt("관리자 비밀번호를 입력하세요");
+
+        if (pw !== ADMIN_PASSWORD) {
+            alert("비밀번호가 틀렸습니다.");
+            return false;
+        }
+
+        return true;
+    }
+    function clearAllHistory() {
+            if (!checkAdminPassword()) return;
+
+            localStorage.removeItem('submission_history');
+
+            alert('전체 체점현황 삭제 완료');
+
+            renderPage(location.hash.substring(1) || '');
+        }
+        function clearProblemHistory(problemId) {
+        if (!checkAdminPassword()) return;
+
+        const history = getSubmissionHistory();
+
+        const filtered = history.filter(
+            h => String(h.problemId) !== String(problemId)
+        );
+
+        localStorage.setItem(
+            'submission_history',
+            JSON.stringify(filtered)
+        );
+
+        alert(`${problemId}번 문제 기록 삭제 완료`);
+
+        renderPage(location.hash.substring(1) || '');
+    }
+    // ── 세션 관리 ──
+    function getSession() {
+        try { return JSON.parse(sessionStorage.getItem('oj_session')); } catch { return null; }
+    }
+    function setSession(id) {
+        sessionStorage.setItem('oj_session', JSON.stringify({ id }));
+    }
+    function clearSession() {
+        sessionStorage.removeItem('oj_session');
+    }
+    function isLoggedIn() {
+        return !!getSession();
+    }
+
+    // ── UI 업데이트 ──
+    function updateAuthUI() {
+        const session = getSession();
+        const loginBtn  = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const userLabel = document.getElementById('user-label');
+        if (session) {
+            loginBtn.style.display  = 'none';
+            logoutBtn.style.display = 'inline-block';
+            userLabel.textContent   = `👤 ${session.id}`;
+        } else {
+            loginBtn.style.display  = 'inline-block';
+            logoutBtn.style.display = 'none';
+            userLabel.textContent   = '';
+        }
+    }
+
+    // ── 로그인 모달 ──
+    function openLoginModal() {
+        document.getElementById('login-overlay').classList.add('show');
+        document.getElementById('login-id').value = '';
+        document.getElementById('login-pw').value = '';
+        document.getElementById('login-error').textContent = '';
+        setTimeout(() => document.getElementById('login-id').focus(), 50);
+    }
+    function closeLoginModal() {
+        document.getElementById('login-overlay').classList.remove('show');
+    }
+
+    function tryLogin() {
+        const id = document.getElementById('login-id').value.trim();
+        const pw = document.getElementById('login-pw').value;
+        const errEl = document.getElementById('login-error');
+
+        if (!id || !pw) { errEl.textContent = '아이디와 비밀번호를 입력하세요.'; return; }
+
+        const match = ACCOUNTS.find(a => a.id === id && a.pw === pw);
+        if (match) {
+            setSession(id);
+            closeLoginModal();
+            updateAuthUI();
+            // 현재 페이지 재렌더 (제출 탭이면 제출 폼 표시)
+            renderPage(location.hash.substring(1) || '');
+        } else {
+            errEl.textContent = '아이디 또는 비밀번호가 올바르지 않습니다.';
+            document.getElementById('login-pw').value = '';
+            document.getElementById('login-pw').focus();
+        }
+    }
+
+    function logout() {
+        clearSession();
+        updateAuthUI();
+        renderPage(location.hash.substring(1) || '');
+    }
+
+    // Enter 키로 로그인
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && document.getElementById('login-overlay').classList.contains('show')) {
+            tryLogin();
+        }
+        if (e.key === 'Escape' && document.getElementById('login-overlay').classList.contains('show')) {
+            closeLoginModal();
+        }
+    });
+    // 오버레이 바깥 클릭 시 닫기
+    document.getElementById('login-overlay').addEventListener('click', e => {
+        if (e.target === document.getElementById('login-overlay')) closeLoginModal();
+    });
+
+    // ══════════════════════════════════════════
+    //  문제 데이터
+    // ══════════════════════════════════════════
     const logoImage = document.getElementById('logo');
-    const problemButton = document.querySelector('.btn');
+    const problemButton = document.getElementById('problem-btn');
+    const statusButton = document.getElementById('status-btn');
     const mainContent = document.getElementById('main-content');
-        const problemData = {
-            '1': {
-                title: '[입출력] #1:아빠도 이제 한계다',
-                content: '<p>다음 문장들을 출력하시오: </p><pre><code>아빠도 이제 한계다.\n그냥 나가 살아라 유전자 탓 사회탓 환경 탓하지 마라.\n아빠도 엄마도 충분히 기다려줬다.\n니 엄마나 나나 어려운 환경에서 컸고 먹고살기만 해도 바쁘고 힘든 시절이라 \n부모의 사랑을 많이 못 받고 자랐다 그래서 결혼할때 우리 자식만은 행복하게 키우자고 약속했다.\n너에게 언제나 최고는 아니더라도 최선을 다해주고 싶었다.\n내가 먹고 입을거 참으며 네 옷, 먹는거, 교육 모두 좋은 조건을 누리게 해주고 싶었다\n네가 방황하거나 철없이 굴때도 앞에선 혼냈지만 뒤 에서는 우리가 못해줘서 그런가보다 하며 네 엄마랑 많이 울었다\n그래도 자식은 나보다 나은 삶을 살겠지 나보단 선택의 자유를 누릴 수 있겠지.\n이 생각만 하며 꼭 참으며 세월을 보냈다 \n그런데 이게 뭐냐? \n너 나이가 몇인지알긴하냐? 도대체 그 나이에 혼자서 할 줄 아는게 뭐냐?\n늘 불만은 많으면서 실천하는게 뭐난 말이다.\n오늘 문득 우리가 닐잘못 키웠다는 생각이 든다.\n거울을 보니 늙은 내 모습에 눈물이 나더라.\n그냥. 이제 나가라. 나를 원망하지도 말고 니 힘으로 알아서 살아라.\n아빠도 지쳤다 당장 짐싸라.</code></pre><hr><p><b>입력:</b> 없다</p><p><b>출력:</b> 위 문장들을 그대로 출력한다.</p>',
-                testCases: [
-                    { input: '', expected: `아빠도 이제 한계다.
-그냥 나가 살아라 유전자 탓 사회탓 환경 탓하지 마라.
-아빠도 엄마도 충분히 기다려줬다.
-니 엄마나 나나 어려운 환경에서 컸고 먹고살기만 해도 바쁘고 힘든 시절이라 
-부모의 사랑을 많이 못 받고 자랐다 그래서 결혼할때 우리 자식만은 행복하게 키우자고 약속했다.
-너에게 언제나 최고는 아니더라도 최선을 다해주고 싶었다.
-내가 먹고 입을거 참으며 네 옷, 먹는거, 교육 모두 좋은 조건을 누리게 해주고 싶었다
-네가 방황하거나 철없이 굴때도 앞에선 혼냈지만 뒤 에서는 우리가 못해줘서 그런가보다 하며 네 엄마랑 많이 울었다
-그래도 자식은 나보다 나은 삶을 살겠지 나보단 선택의 자유를 누릴 수 있겠지.
-이 생각만 하며 꼭 참으며 세월을 보냈다 
-그런데 이게 뭐냐? 
-너 나이가 몇인지알긴하냐? 도대체 그 나이에 혼자서 할 줄 아는게 뭐냐?
-늘 불만은 많으면서 실천하는게 뭐난 말이다.
-오늘 문득 우리가 닐잘못 키웠다는 생각이 든다.
-거울을 보니 늙은 내 모습에 눈물이 나더라.
-그냥. 이제 나가라. 나를 원망하지도 말고 니 힘으로 알아서 살아라.
-아빠도 지쳤다 당장 짐싸라.` }
-                ]
-            },
-            '2': {
-                title: '[입출력] #2: 희망',
-                content: '<p>희망은 사실 희희 망했다의 줄임말이다.</p><p>희희 망했다 를 줄을 나누어서 출력하시오.</p><hr><p><b>입력:</b> 없다</p><p><b>출력:</b> 첫째 줄에 희희를, 둘째 줄에 망했다를 출력한다.</p>',
-                testCases: [
-                    { input: '', expected: '희희\n망했다' }
-                ]
-            },
-            '3': {
-                title: '[입출력] #3: Royal 쓰쓰',
-                content: '<p>동훈이는 숫자 44를 좋아한다</p><p>동훈이 친구 철수는 33을 좋아하고, 영희는 22, 태연이는 55, 잼 스미스는 66 ...</p><p>한 숫자를 입력받으면 그 숫자를 다시 출력해보자</p><hr><p><b>입력:</b> 정수(1~9)</p><p><b>출력:</b> 입력받은 정수를 다시 출력한다</p>',
-                testCases: [
-                    { input: '4', expected: '44' },
-                    { input: '3', expected: '33' },
-                    { input: '7', expected: '77' },
-                ]
-            },
-            '4': {
-                title: '[연산자] #4: 첫 심부름',
-                content: '<p>철수는 오이 n 개와 당근 m 개를 사서 와야 한다.</p><p>근데 철수는 개 빡대가리여서 더하기도 못한다. 우리가 철수를 도와주자</p><hr><p><b>입력:</b> 첫째 줄에 n와 m이 주어진다. (0 &lt; n, m &lt; 10)</p><p><b>출력:</b> 첫째 줄에 n+m를 출력한다.</p><pre><code>예시 입력:\n1 2\n예시 출력:\n3</code></pre>',
-                testCases: [
-                    { input: '1 2', expected: '3' },
-                    { input: '3 5', expected: '8' },
-                    { input: '9 1', expected: '10' },
-                ]
-            },
-            '5': {
-                title: '[연산자] #5: 인간시대의 끝이 도래했다',
-                content: '<p>AI 들은 완전히 멘탈이 나가버렸습니다.</p><p>인간들이 사칙연산도 못했기 때문인데요</p><p>n, m을 입력받을때 합, 곱, 차, 몫, 나머지를 각각 한 줄씩 출력하는 프로그램을 작성하시오</p>',
-                testCases: [
-                    { input: '10 3', expected: '13\n30\n7\n3\n1' },
-                    { input: '6 2', expected: '8\n12\n4\n3\n0' },
-                ]
-            },
-            '6': {
-                title: '[조건문] #6: 연필 한 다스만 주시오',
-                content: '<p>1다스는 연필 12개이다. 연필 개수를 입력받아 한 다스인지 판별하라.</p><hr><p><b>입력:</b> 0 &lt; n &lt; 100</p><p><b>출력:</b> OK 또는 NO</p>',
-                testCases: [
-                    { input: '12', expected: 'OK' },
-                    { input: '10', expected: 'NO' },
-                    { input: '24', expected: 'NO' },
-                ]
-            },
-            '7': {
-                title: '[조건문] #7: 나는야 189',
-                content: '<h2><b>"내 키는 189"</b></h3><h6>-김민종-</h6><hr><p>다음말은 키가 169인 김민종이 말한 말 이다.</p><p>189를 입력받으면 구라를, 169를 입력받으면 김민종을, 그외의 다른 정수를 입력받으면 x를 출력하시오.</p>',
-                testCases: [
-                    { input: '189', expected: '구라' },
-                    { input: '169', expected: '김민종' },
-                    { input: '289', expected: 'x' },
-                ]
-            },
-             '8': {
-                title: '[반복문] #8: 기도해드릴게요',
-                content: '<p><a href="https://www.instagram.com/reel/DWCkRUMzvxh/?utm_source=ig_web_copy_link" class="link">기도아저씨</a>는 새로운 시스템을 도입할려한다.</p><p>기도의 필요성을 숫자로 나타내고, 그 숫자만큼 기도를 하는것이다.</p>한 정수를 입력받았을때, 그 정수만큼 기도해드릴게요 를 출력하시오<p>',
-                testCases: [
-                    { input: '1', expected: '기도해드릴게요' },
-                    { input: '2', expected: '기도해드릴게요\n기도해드릴게요' },
-                    { input: '3', expected: '기도해드릴게요\n기도해드릴게요\n기도해드릴게요' },
-                ]
-            },
-             '9': {
-                title: '[번외] #9: Hello',
-                content: `<p> Hello를 출력하는 코드를 작성하시오</p><p>단 H,e,l,o,"",'',는 사용할수 없습니다.</p><br><b>힌트:</b><p>아스키 코드를 사용하면 쉽게 풀수있다.</p><p>print(chr(숫자)) 를 하면 숫자에 대한 아스키코드값을 출력할수 있다.</p>`,
-                testCases: [
-                    { input: '', expected: 'Hello' },
-                   ]
-            },
-             '10': {
-                title: '[번외] #10: 그저 두배',
-                content: '<p>한 정수를 입력받아 그 수에 2를 곱한 값을 출력하시오</p><p>단 변수명,함수명 등에는 오직 문자 I(대문자 i), l(소문자 L)만 사용할수 있다</p>',
-                testCases: [
-                    { input: '512', expected: '1024' },
-                   ]
-            },
-            '11': {
-                title: '[번외] #11: 정복자',
-                content: '<p>이 문제를 푸는자 학교를 정복할 것이다.</p><hr><p><b>입력:</b>학교를 정목할 자에겐 입력따위 필요없다</p><p><b>출력:</b>문제의 정답을 출력한다.</p><pre><code>예시 입력:\n학교를 정복할 자에겐 예시 입력 따위 필요없다\n예시 출력:\n학교를 정복할 자에겐 예시 출력 따위 필요없다</code></pre><hr><p><b>참고</b></p><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUqcyyKZ3TRZKJLYrTZvGrZnY9Mc6bqYz89Q&s">',
-                testCases: [
-                    { input: '', expected: '문제의 정답' },
-                ]
-            },
-            '12': {
-                title: '[번외] #12: 인생..',
-                content: '<h2>"인생은 원래 불공평하다"</h2><h4>-빌 게이츠-</h4><hr><p>다음말은 빌 게이츠의 명언중 하나이다.</p><p>알아서 잘 정답을 찾아 출력하시오</p><hr><p><b>힌트</b>정수다</p>',
-                testCases: [
-                    { input: '', expected: '3' },
-                ]
-            },
-            '13': {
-                title: '[통합] #13: 학교 폭@8',
-                content: '<p>치동중 전교회장 김민종이 노의환 선생님에 대한 분노로 학교에 폭탄을 설치하고, n초뒤에 터지게 설정해 놓았다고 하였다.</p><p>학교의 선생님들은 학교종말의 카운트를 하기로 했다.</p><p>지구 카운트를 n초부터 시작해 3초 부터는 히히,하하,헤헤를 출력하는 코드를 작성하시오</p>',
-                testCases: [
-                    { input: '4', expected: '4\n히히\n하하\n헤헤' },
-                ]
-            },
-            '14': {
-                title: '[반복문] #14: !',
-                content: '<p>한 정수 값이 입력되면 그 정수의 팩토리얼 값을 출력하시오</p>',
-                testCases: [
-                    { input: '5', expected: '120' },
-                    { input: '6', expected: '720' },
-                    { input: '1', expected: '1' },
-                ]
-            },
-            '15': {
-                title: '[리스트] #15: 아 진짜 짜증나',
-                content: '<p>학생회장 김민종씨는 요즘 노의환 선생님에대해 불만이 많다</p><p>자신에게 너무 막대한 양의 일과 업무를 주기 때문이다</p><p>그는 너무 화를 많이 받은 나머지 폭주하게 되어, 선생님에게 반항하는 꿈을 꾸게 되었다</p><p>한 정수 n을 입력받을때, 그 정수만큼 리스트의 사이클을 돌면서 선생님의 이름을 출력하시오</p><hr><p>이때 리스트의 값은 영어선생님, 국어선생님, 사회선생님, 수학선생님 순으로 사이클을 돌아간다</p>',
-                testCases: [
-                    { input: '3', expected: '영어선생님\n국어선생님\n사회선생님' },
-                    { input: '4', expected: '영어선생님\n국어선생님\n사회선생님\n수학선생님' },
-                    { input: '7', expected: '영어선생님\n국어선생님\n사회선생님\n수학선생님\n영어선생님\n국어선생님\n사회선생님' },
-                ]
-            },
-            '16': {
-                title: '[리스트+반복문] #16: 가라 피카츄! 야르킁킁!',
-                content: '<p>우리의 위대한 지우가 태초마을을 탐방하면서 포켓몬 4마리를 잡았다</p><p>지우의 가방에는 지금 피카츄, 파이리, 꼬부기, 이상해씨가 있다</p><p>어느날 갑자기 마을애 개 폐급 듀오가 등장해서 포켓몬들을 소환하게 되았다.</p><p>피카츄는 백만볼트, 파이리는 화염방사 공격, 꼬부기는 물대포 공격, 이상해씨는 덩굴채찍 공격 이 있다.</p><p>이때 for문으로 돌아가면서 포켓몬과 스킬을 출력하는 코드를 작성하시오</p><hr><p><b>개폐급듀오</b></p><img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FA7m1L%2FdJMcaaFpKxn%2FAAAAAAAAAAAAAAAAAAAAABdTQsAf-kB44V5IQ7IXGKBSTjAFDv82vYStjssT5hsb%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1780239599%26allow_ip%3D%26allow_referer%3D%26signature%3DezJMVWnEKo59uqz%252Fufr0UOuvDUs%253D"><img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2F7S9Ya%2FdJMcajhZbLI%2FAAAAAAAAAAAAAAAAAAAAADVbexoGv_oQefU5WWmWMtMG3xgK4e4vaPRQM4QX0XA7%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1780239599%26allow_ip%3D%26allow_referer%3D%26signature%3DVPMGtoawfdch28tOyW0mJef2erA%253D">',
-                testCases: [
-                    { input: '', expected: '피카츄\n백만볼트\n파이리\n화염방사\n꼬부기\n물대포\n이상해씨\n덩굴채찍' },
-                ]
-            },
-        };
-const routes = {
+    statusButton.addEventListener('click', () => {
+        const path = '/status';
+
+        history.pushState({ path }, '', `#${path}`);
+
+        renderPage(path);
+    });
+    const problemData = {
+        '1': {
+            title: '[입출력] #1:아빠도 이제 한계다',
+            content: '<p>다음 문장들을 출력하시오: </p><pre><code>아빠도 이제 한계다.\n그냥 나가 살아라 유전자 탓 사회탓 환경 탓하지 마라.\n아빠도 엄마도 충분히 기다려줬다.\n니 엄마나 나나 어려운 환경에서 컸고 먹고살기만 해도 바쁘고 힘든 시절이라 \n부모의 사랑을 많이 못 받고 자랐다 그래서 결혼할때 우리 자식만은 행복하게 키우자고 약속했다.\n너에게 언제나 최고는 아니더라도 최선을 다해주고 싶었다.\n내가 먹고 입을거 참으며 네 옷, 먹는거, 교육 모두 좋은 조건을 누리게 해주고 싶었다\n네가 방황하거나 철없이 굴때도 앞에선 혼냈지만 뒤 에서는 우리가 못해줘서 그런가보다 하며 네 엄마랑 많이 울었다\n그래도 자식은 나보다 나은 삶을 살겠지 나보단 선택의 자유를 누릴 수 있겠지.\n이 생각만 하며 꼭 참으며 세월을 보냈다 \n그런데 이게 뭐냐? \n너 나이가 몇인지알긴하냐? 도대체 그 나이에 혼자서 할 줄 아는게 뭐냐?\n늘 불만은 많으면서 실천하는게 뭐난 말이다.\n오늘 문득 우리가 닐잘못 키웠다는 생각이 든다.\n거울을 보니 늙은 내 모습에 눈물이 나더라.\n그냥. 이제 나가라. 나를 원망하지도 말고 니 힘으로 알아서 살아라.\n아빠도 지쳤다 당장 짐싸라.</code></pre><hr><p><b>입력:</b> 없다</p><p><b>출력:</b> 위 문장들을 그대로 출력한다.</p>',
+            testCases: [
+                { input: '', expected: `아빠도 이제 한계다.\n그냥 나가 살아라 유전자 탓 사회탓 환경 탓하지 마라.\n아빠도 엄마도 충분히 기다려줬다.\n니 엄마나 나나 어려운 환경에서 컸고 먹고살기만 해도 바쁘고 힘든 시절이라 \n부모의 사랑을 많이 못 받고 자랐다 그래서 결혼할때 우리 자식만은 행복하게 키우자고 약속했다.\n너에게 언제나 최고는 아니더라도 최선을 다해주고 싶었다.\n내가 먹고 입을거 참으며 네 옷, 먹는거, 교육 모두 좋은 조건을 누리게 해주고 싶었다\n네가 방황하거나 철없이 굴때도 앞에선 혼냈지만 뒤 에서는 우리가 못해줘서 그런가보다 하며 네 엄마랑 많이 울었다\n그래도 자식은 나보다 나은 삶을 살겠지 나보단 선택의 자유를 누릴 수 있겠지.\n이 생각만 하며 꼭 참으며 세월을 보냈다 \n그런데 이게 뭐냐? \n너 나이가 몇인지알긴하냐? 도대체 그 나이에 혼자서 할 줄 아는게 뭐냐?\n늘 불만은 많으면서 실천하는게 뭐난 말이다.\n오늘 문득 우리가 닐잘못 키웠다는 생각이 든다.\n거울을 보니 늙은 내 모습에 눈물이 나더라.\n그냥. 이제 나가라. 나를 원망하지도 말고 니 힘으로 알아서 살아라.\n아빠도 지쳤다 당장 짐싸라.` }
+            ]
+        },
+        '2': {
+            title: '[입출력] #2: 희망',
+            content: '<p>희망은 사실 희희 망했다의 줄임말이다.</p><p>희희 망했다 를 줄을 나누어서 출력하시오.</p><hr><p><b>입력:</b> 없다</p><p><b>출력:</b> 첫째 줄에 희희를, 둘째 줄에 망했다를 출력한다.</p>',
+            testCases: [
+                { input: '', expected: '희희\n망했다' }
+            ]
+        },
+        '3': {
+            title: '[입출력] #3: Royal 쓰쓰',
+            content: '<p>동훈이는 숫자 44를 좋아한다</p><p>동훈이 친구 철수는 33을 좋아하고, 영희는 22, 태연이는 55, 잼 스미스는 66 ...</p><p>한 숫자를 입력받으면 그 숫자를 다시 출력해보자</p><hr><p><b>입력:</b> 정수(1~9)</p><p><b>출력:</b> 입력받은 정수를 다시 출력한다</p>',
+            testCases: [
+                { input: '4', expected: '44' },
+                { input: '3', expected: '33' },
+                { input: '7', expected: '77' },
+            ]
+        },
+        '4': {
+            title: '[연산자] #4: 첫 심부름',
+            content: '<p>철수는 오이 n 개와 당근 m 개를 사서 와야 한다.</p><p>근데 철수는 개 빡대가리여서 더하기도 못한다. 우리가 철수를 도와주자</p><hr><p><b>입력:</b> 첫째 줄에 n와 m이 주어진다. (0 &lt; n, m &lt; 10)</p><p><b>출력:</b> 첫째 줄에 n+m를 출력한다.</p><pre><code>예시 입력:\n1 2\n예시 출력:\n3</code></pre>',
+            testCases: [
+                { input: '1 2', expected: '3' },
+                { input: '3 5', expected: '8' },
+                { input: '9 1', expected: '10' },
+            ]
+        },
+        '5': {
+            title: '[연산자] #5: 인간시대의 끝이 도래했다',
+            content: '<p>AI 들은 완전히 멘탈이 나가버렸습니다.</p><p>인간들이 사칙연산도 못했기 때문인데요</p><p>n, m을 입력받을때 합, 곱, 차, 몫, 나머지를 각각 한 줄씩 출력하는 프로그램을 작성하시오</p>',
+            testCases: [
+                { input: '10 3', expected: '13\n30\n7\n3\n1' },
+                { input: '6 2', expected: '8\n12\n4\n3\n0' },
+            ]
+        },
+        '6': {
+            title: '[조건문] #6: 연필 한 다스만 주시오',
+            content: '<p>1다스는 연필 12개이다. 연필 개수를 입력받아 한 다스인지 판별하라.</p><hr><p><b>입력:</b> 0 &lt; n &lt; 100</p><p><b>출력:</b> OK 또는 NO</p>',
+            testCases: [
+                { input: '12', expected: 'OK' },
+                { input: '10', expected: 'NO' },
+                { input: '24', expected: 'NO' },
+            ]
+        },
+        '7': {
+            title: '[조건문] #7: 나는야 189',
+            content: '<h2><b>"내 키는 189"</b></h3><h6>-김민종-</h6><hr><p>다음말은 키가 169인 김민종이 말한 말 이다.</p><p>189를 입력받으면 구라를, 169를 입력받으면 김민종을, 그외의 다른 정수를 입력받으면 x를 출력하시오.</p>',
+            testCases: [
+                { input: '189', expected: '구라' },
+                { input: '169', expected: '김민종' },
+                { input: '289', expected: 'x' },
+            ]
+        },
+        '8': {
+            title: '[반복문] #8: 기도해드릴게요',
+            content: '<p><a href="https://www.instagram.com/reel/DWCkRUMzvxh/?utm_source=ig_web_copy_link" class="link">기도아저씨</a>는 새로운 시스템을 도입할려한다.</p><p>기도의 필요성을 숫자로 나타내고, 그 숫자만큼 기도를 하는것이다.</p>한 정수를 입력받았을때, 그 정수만큼 기도해드릴게요 를 출력하시오<p>',
+            testCases: [
+                { input: '1', expected: '기도해드릴게요' },
+                { input: '2', expected: '기도해드릴게요\n기도해드릴게요' },
+                { input: '3', expected: '기도해드릴게요\n기도해드릴게요\n기도해드릴게요' },
+            ]
+        },
+        '9': {
+            title: '[번외] #9: Hello',
+            content: `<p> Hello를 출력하는 코드를 작성하시오</p><p>단 H,e,l,o,"",'',는 사용할수 없습니다.</p><br><b>힌트:</b><p>아스키 코드를 사용하면 쉽게 풀수있다.</p><p>print(chr(숫자)) 를 하면 숫자에 대한 아스키코드값을 출력할수 있다.</p>`,
+            testCases: [
+                { input: '', expected: 'Hello' },
+            ]
+        },
+        '10': {
+            title: '[번외] #10: 그저 두배',
+            content: '<p>한 정수를 입력받아 그 수에 2를 곱한 값을 출력하시오</p><p>단 변수명,함수명 등에는 오직 문자 I(대문자 i), l(소문자 L)만 사용할수 있다</p>',
+            testCases: [
+                { input: '512', expected: '1024' },
+            ]
+        },
+        '11': {
+            title: '[번외] #11: 정복자',
+            content: '<p>이 문제를 푸는자 학교를 정복할 것이다.</p><hr><p><b>입력:</b>학교를 정목할 자에겐 입력따위 필요없다</p><p><b>출력:</b>문제의 정답을 출력한다.</p><pre><code>예시 입력:\n학교를 정복할 자에겐 예시 입력 따위 필요없다\n예시 출력:\n학교를 정복할 자에겐 예시 출력 따위 필요없다</code></pre><hr><p><b>참고</b></p><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUqcyyKZ3TRZKJLYrTZvGrZnY9Mc6bqYz89Q&s">',
+            testCases: [
+                { input: '', expected: '문제의 정답' },
+            ]
+        },
+        '12': {
+            title: '[번외] #12: 인생..',
+            content: '<h2>"인생은 원래 불공평하다"</h2><h4>-빌 게이츠-</h4><hr><p>다음말은 빌 게이츠의 명언중 하나이다.</p><p>알아서 잘 정답을 찾아 출력하시오</p><hr><p><b>힌트</b>정수다</p>',
+            testCases: [
+                { input: '', expected: '3' },
+            ]
+        },
+        '13': {
+            title: '[통합] #13: 학교 폭@8',
+            content: '<p>치동중 전교회장 김민종이 노의환 선생님에 대한 분노로 학교에 폭탄을 설치하고, n초뒤에 터지게 설정해 놓았다고 하였다.</p><p>학교의 선생님들은 학교종말의 카운트를 하기로 했다.</p><p>지구 카운트를 n초부터 시작해 3초 부터는 히히,하하,헤헤를 출력하는 코드를 작성하시오</p>',
+            testCases: [
+                { input: '4', expected: '4\n히히\n하하\n헤헤' },
+            ]
+        },
+        '14': {
+            title: '[반복문] #14: !',
+            content: '<p>한 정수 값이 입력되면 그 정수의 팩토리얼 값을 출력하시오</p>',
+            testCases: [
+                { input: '5', expected: '120' },
+                { input: '6', expected: '720' },
+                { input: '1', expected: '1' },
+            ]
+        },
+        '15': {
+            title: '[리스트] #15: 아 진짜 짜증나',
+            content: '<p>학생회장 김민종씨는 요즘 노의환 선생님에대해 불만이 많다</p><p>자신에게 너무 막대한 양의 일과 업무를 주기 때문이다</p><p>그는 너무 화를 많이 받은 나머지 폭주하게 되어, 선생님에게 반항하는 꿈을 꾸게 되었다</p><p>한 정수 n을 입력받을때, 그 정수만큼 리스트의 사이클을 돌면서 선생님의 이름을 출력하시오</p><hr><p>이때 리스트의 값은 영어선생님, 국어선생님, 사회선생님, 수학선생님 순으로 사이클을 돌아간다</p>',
+            testCases: [
+                { input: '3', expected: '영어선생님\n국어선생님\n사회선생님' },
+                { input: '4', expected: '영어선생님\n국어선생님\n사회선생님\n수학선생님' },
+                { input: '7', expected: '영어선생님\n국어선생님\n사회선생님\n수학선생님\n영어선생님\n국어선생님\n사회선생님' },
+            ]
+        },
+        '16': {
+            title: '[리스트+반복문] #16: 가라 피카츄! 야르킁킁!',
+            content: '<p>우리의 위대한 지우가 태초마을을 탐방하면서 포켓몬 4마리를 잡았다</p><p>지우의 가방에는 지금 피카츄, 파이리, 꼬부기, 이상해씨가 있다</p><p>어느날 갑자기 마을애 개 폐급 듀오가 등장해서 포켓몬들을 소환하게 되았다.</p><p>피카츄는 백만볼트, 파이리는 화염방사 공격, 꼬부기는 물대포 공격, 이상해씨는 덩굴채찍 공격 이 있다.</p><p>이때 for문으로 돌아가면서 포켓몬과 스킬을 출력하는 코드를 작성하시오</p><hr><p><b>개폐급듀오</b></p><img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FA7m1L%2FdJMcaaFpKxn%2FAAAAAAAAAAAAAAAAAAAAABdTQsAf-kB44V5IQ7IXGKBSTjAFDv82vYStjssT5hsb%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1780239599%26allow_ip%3D%26allow_referer%3D%26signature%3DezJMVWnEKo59uqz%252Fufr0UOuvDUs%253D"><img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2F7S9Ya%2FdJMcajhZbLI%2FAAAAAAAAAAAAAAAAAAAAADVbexoGv_oQefU5WWmWMtMG3xgK4e4vaPRQM4QX0XA7%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1780239599%26allow_ip%3D%26allow_referer%3D%26signature%3DVPMGtoawfdch28tOyW0mJef2erA%253D">',
+            testCases: [
+                { input: '', expected: '피카츄\n백만볼트\n파이리\n화염방사\n꼬부기\n물대포\n이상해씨\n덩굴채찍' },
+            ]
+        },
+    };
+
+    const routes = {
         '': {
             title: '2than online judge',
             content: `
@@ -370,12 +685,79 @@ const routes = {
                 return html;
             },
             cssClass: 'problem-list'
+        },
+        '/status': {
+            title: '채점 현황',
+            contentGenerator: () => {
+                const history = getSubmissionHistory();
+
+                if (history.length === 0) {
+                    return '<h2>채점 현황</h2><p>아직 제출이 없습니다.</p>';
+                }
+
+               let html = `
+                    <h2>채점 현황</h2>
+
+                    <div style="margin-bottom:20px;">
+
+                        <button onclick="clearAllHistory()">
+                            전체 삭제
+                        </button>
+
+                        <button onclick="clearProblemHistory(prompt('삭제할 문제 번호'))">
+                            문제별 삭제
+                        </button>
+
+                        <button onclick="clearUserHistory(prompt('삭제할 유저 아이디'))">
+                            유저별 삭제
+                        </button>
+
+                    </div>
+
+                    <div class="problem-list">
+                    <ul>
+                `;
+
+                history.forEach(h => {
+                    const resultColor =
+                        h.result === '맞았습니다'
+                        ? '#2e7d32'
+                        : '#c62828';
+
+                    html += `
+                        <li>
+                            <b>${h.user}</b>
+                            - 문제 ${h.problemId}
+                            -
+                            <span style="color:${resultColor}; font-weight:bold;">
+                                ${h.result}
+                            </span>
+                            <br>
+                            <small>${h.time}</small>
+                        </li>
+                    `;
+                });
+
+                html += '</ul></div>';
+
+                return html;
+            },
+
+            cssClass: 'problem-list'
         }
     };
-
-    // [수정됨] 제출 탭 구성 함수 (하나로 통합)
+    
+    // ── 제출 탭 HTML 생성 ──
     function buildSubmissionTab(problemId) {
-    // 내부의 테스트케이스 생성 로직을 모두 지우고 HTML 구조만 남깁니다.
+        if (!isLoggedIn()) {
+            return `
+                <div class="login-required-box">
+                    <div class="lock-icon">🔒</div>
+                    <p>코드를 제출하려면 <b>로그인</b>이 필요합니다.</p>
+                    <button onclick="openLoginModal()">로그인하기</button>
+                </div>
+            `;
+        }
         return `
             <div class="submission-area">
                 <div class="submission-desc">
@@ -390,8 +772,61 @@ const routes = {
         `;
     }
 
-    // [수정됨] 실제 파이썬 코드 실행 및 채점 로직
+    function buildStatusTab(problemId) {
+        if (!isLoggedIn()) {
+            return `
+                <div class="login-required-box">
+                    <div class="lock-icon">🔒</div>
+                    <p>채점 현황을 보려면 로그인하세요.</p>
+                    <button onclick="openLoginModal()">로그인하기</button>
+                </div>
+            `;
+        }
+
+        const session = getSession();
+        const history = getSubmissionHistory()
+            .filter(h => String(h.problemId) === String(problemId));
+
+        if (history.length === 0) {
+            return `<p>제출 기록이 없습니다.</p>`;
+        }
+
+        let html = `
+            <table style="width:100%; border-collapse: collapse;">
+                <tr>
+                    <th style="border-bottom:1px solid #ddd; padding:10px;">유저</th>
+                    <th style="border-bottom:1px solid #ddd; padding:10px;">결과</th>
+                    th style="border-bottom:1px solid #ddd; padding:10px;">시간</th>
+                </tr>
+        `;
+
+        history.forEach(h => {
+            html += `
+               <tr>
+                    <td style="padding:10px;">
+                        ${h.user}
+                    </td>
+
+                    <td style="padding:10px; color:${h.result === '맞았습니다' ? 'green' : 'red'};">
+                        ${h.result}
+                    </td>
+
+                    <td style="padding:10px;">
+                        ${h.time}
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `</table>`;
+
+        return html;
+    }
+
+    // ── 채점 로직 ──
     async function judgeCode(problemId) {
+        if (!isLoggedIn()) { openLoginModal(); return; }
+
         const userCode = document.getElementById('output-input').value;
         const resultBox = document.getElementById('result-box');
         const submitBtn = document.getElementById('submit-btn');
@@ -399,7 +834,6 @@ const routes = {
 
         if (!userCode.trim()) return alert("코드를 입력하세요!");
 
-        // Pyodide 엔진 로드 확인
         if (!window.pyodide) {
             resultBox.style.display = 'block';
             resultBox.innerText = "파이썬 엔진을 준비 중입니다 (잠시만 기다려주세요)...";
@@ -422,7 +856,6 @@ const routes = {
             }
 
             for (const tc of cases) {
-                // 테스트케이스별 입력값 및 출력 가로채기 설정
                 const setupScript = `
 import sys, io
 sys.stdout = io.StringIO()
@@ -431,16 +864,16 @@ def input(p=''): return input_data.pop(0) if input_data else ""
 `;
                 await pyodide.runPythonAsync(setupScript + "\n" + userCode);
                 const output = pyodide.runPython("sys.stdout.getvalue()");
-                
-                if (normalize(output) === normalize(tc.expected)) {
-                    passCount++;
-                }
+
+                if (normalize(output) === normalize(tc.expected)) passCount++;
             }
 
             if (passCount === cases.length) {
+                saveSubmission(problemId, '맞았습니다');
                 resultBox.className = 'correct';
                 resultBox.innerText = "✅ 맞았습니다! 모든 테스트 통과!";
             } else {
+                saveSubmission(problemId, '틀렸습니다');
                 resultBox.className = 'wrong';
                 resultBox.innerText = `❌ 틀렸습니다. (${passCount}/${cases.length} 통과)`;
             }
@@ -453,13 +886,30 @@ def input(p=''): return input_data.pop(0) if input_data else ""
     }
 
     function normalize(str) {
-        return str.toString().trim().replace(/\r\n/g, '\n').split('\n').map(line => line.trimEnd()).join('\n');
+        return str.toString().trim().replace(/\r\n/g, '\n').split('\n').map(l => l.trimEnd()).join('\n');
     }
 
-    function escapeHtml(str) {
-        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    function getSubmissionHistory() {
+        return JSON.parse(localStorage.getItem('submission_history') || '[]');
     }
 
+    function saveSubmission(problemId, result) {
+        const session = getSession();
+        if (!session) return;
+
+        const history = getSubmissionHistory();
+
+        history.unshift({
+            user: session.id,
+            problemId,
+            result,
+            time: new Date().toLocaleString()
+        });
+
+        localStorage.setItem('submission_history', JSON.stringify(history));
+    }
+
+    // ── 페이지 라우팅 ──
     function renderPage(path) {
         mainContent.className = '';
         let route = routes[path];
@@ -479,6 +929,7 @@ def input(p=''): return input_data.pop(0) if input_data else ""
                         <div class="problem-tabs">
                             <button class="tab-button" data-tab="problem" data-problem-id="${currentProblemId}">문제</button>
                             <button class="tab-button" data-tab="submission" data-problem-id="${currentProblemId}">제출</button>
+                            <button class="tab-button" data-tab="status" data-problem-id="${currentProblemId}">채점현황</button>
                         </div>
                         <div class="tab-content-container">
                             <div id="problem-tab-content" class="tab-pane">
@@ -486,8 +937,22 @@ def input(p=''): return input_data.pop(0) if input_data else ""
                                     ${problemData[currentProblemId].content}
                                 </div>
                             </div>
-                            <div id="submission-tab-content" class="tab-pane">
-                                ${buildSubmissionTab(currentProblemId)}
+                            <div class="tab-content-container">
+
+                                <div id="problem-tab-content" class="tab-pane">
+                                    <div class="problem-detail-content">
+                                        ${problemData[currentProblemId].content}
+                                    </div>
+                                </div>
+
+                                <div id="submission-tab-content" class="tab-pane">
+                                    ${buildSubmissionTab(currentProblemId)}
+                                </div>
+
+                                <div id="status-tab-content" class="tab-pane">
+                                    ${buildStatusTab(currentProblemId)}
+                                </div>
+
                             </div>
                         </div>
                     `,
@@ -516,6 +981,7 @@ def input(p=''): return input_data.pop(0) if input_data else ""
         if (activePane) activePane.classList.add('active');
     }
 
+    // ── 이벤트 리스너 ──
     logoImage.addEventListener('click', () => {
         history.pushState({ path: '' }, '', '#');
         renderPage('');
@@ -550,6 +1016,7 @@ def input(p=''): return input_data.pop(0) if input_data else ""
     });
 
     window.addEventListener('load', () => {
+        updateAuthUI();
         const initialHash = location.hash.substring(1) || '';
         renderPage(initialHash);
         if (initialHash.startsWith('/problems/') && initialHash.split('/').length === 2) {
