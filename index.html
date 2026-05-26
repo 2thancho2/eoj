@@ -377,7 +377,17 @@
     </div>
 
     <script>
-    const ADMIN_PASSWORD = "ethan1205";
+    let devtools = false;
+    const threshold = 160;
+
+    setInterval(() => {
+    if (window.outerWidth - window.innerWidth > threshold ||
+        window.outerHeight - window.innerHeight > threshold) {
+        devtools = true;
+        document.body.innerHTML = ""; // 또는 경고 표시
+    }
+    }, 500);
+    const ADMIN_PASSWORD = "ethan1205!";
     // ══════════════════════════════════════════
     //  ★ 계정 목록 — 여기서 직접 수정하세요 ★
     // ══════════════════════════════════════════
