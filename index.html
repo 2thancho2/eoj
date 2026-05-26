@@ -343,6 +343,7 @@
     <img id="logo" width="105" height="105" src="https://i.postimg.cc/kMfxNKWm/inisyeol-E.png">
     <button class="btn" id="problem-btn">문제</button>
     <button class="btn" id="status-btn">채점현황</button>
+    <button class="btn" id="mypage-btn">마이페이지</button>
 
     <!-- 우측 상단 인증 영역 -->
     <div id="auth-area">
@@ -376,7 +377,7 @@
     </div>
 
     <script>
-    const ADMIN_PASSWORD = "ethan1205!";
+    const ADMIN_PASSWORD = "ethan1205";
     // ══════════════════════════════════════════
     //  ★ 계정 목록 — 여기서 직접 수정하세요 ★
     // ══════════════════════════════════════════
@@ -526,7 +527,15 @@
     const logoImage = document.getElementById('logo');
     const problemButton = document.getElementById('problem-btn');
     const statusButton = document.getElementById('status-btn');
+    const mypageButton = document.getElementById('mypage-btn');
     const mainContent = document.getElementById('main-content');
+    mypageButton.addEventListener('click', () => {
+        const path = '/mypage';
+
+        history.pushState({ path }, '', `#${path}`);
+
+        renderPage(path);
+    });
     statusButton.addEventListener('click', () => {
         const path = '/status';
 
@@ -736,7 +745,80 @@
             },
 
             cssClass: 'problem-list'
+        },
+        '/mypage': {
+    title: '마이페이지',
+
+    contentGenerator: () => {
+
+        if (!isLoggedIn()) {
+            return `
+                <h2>마이페이지</h2>
+                <p>로그인이 필요합니다.</p>
+            `;
         }
+
+        const session = getSession();
+
+        const history = getSubmissionHistory()
+            .filter(h => h.user === session.id);
+
+        let html = `
+            <h2>👤 ${session.id}님의 마이페이지</h2>
+
+            <p>
+                푼 문제 수:
+                <b>${history.filter(h => h.result === '맞았습니다').length}</b>
+            </p>
+
+            <div class="problem-list">
+            <ul>
+        `;
+
+        if (history.length === 0) {
+            html += `<p>제출 기록이 없습니다.</p>`;
+        } else {
+
+            history.forEach(h => {
+
+                const title =
+                    problemData[h.problemId]?.title || `문제 ${h.problemId}`;
+
+                html += `
+                    <li>
+                        <b>${title}</b>
+                        <br>
+
+                        결과:
+                        <span style="
+                            color:${h.result === '맞았습니다'
+                                ? 'green'
+                                : 'red'
+                            };
+                            font-weight:bold;
+                        ">
+                            ${h.result}
+                        </span>
+
+                        <br>
+
+                        시간:
+                        ${h.time}
+                    </li>
+                `;
+            });
+        }
+
+        html += `
+            </ul>
+            </div>
+        `;
+
+        return html;
+    },
+
+    cssClass: 'problem-list'
+},
     };
     
     // ── 제출 탭 HTML 생성 ──
