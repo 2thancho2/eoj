@@ -949,10 +949,10 @@ function getUserScore(userId) {
             // 점수 기준으로 문제 난이도 티어 표시
             let diffColor = '#cd7f32';
             let diffName = 'Bronze';
-            if (score >= 20) { diffColor = '#9b59b6'; diffName = 'Master'; }
-            else if (score >= 15) { diffColor = '#00c8ff'; diffName = 'Platinum'; }
-            else if (score >= 10) { diffColor = '#f1c40f'; diffName = 'Gold'; }
-            else if (score >= 7) { diffColor = '#a0a0a0'; diffName = 'Silver'; }
+            if (score >= 5) { diffColor = '#9b59b6'; diffName = 'Master'; }
+            else if (score >= 4) { diffColor = '#00c8ff'; diffName = 'Platinum'; }
+            else if (score >= 3) { diffColor = '#f1c40f'; diffName = 'Gold'; }
+            else if (score >= 2) { diffColor = '#a0a0a0'; diffName = 'Silver'; }
 
             html += `
                 <li>
