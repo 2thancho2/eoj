@@ -338,6 +338,8 @@
     </style>
     <link rel="icon" href="https://i.postimg.cc/kMfxNKWm/inisyeol-E.png" type="image/png" />
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <img id="logo" width="105" height="105" src="https://i.postimg.cc/kMfxNKWm/inisyeol-E.png">
@@ -377,6 +379,11 @@
     </div>
 
     <script>
+    const firebaseConfig = {
+    databaseURL: "https://than-7d1e3-default-rtdb.firebaseio.com/"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
     let devtools = false;
     const threshold = 160;
 
@@ -406,7 +413,6 @@
         { id: '김다함', pw: '30403' },
         { id: '김의찬', pw: '21011' },
         { id: '박관률', pw: '30109' },
-        { id: '서원주', pw: '30911' },
         // 필요한 만큼 추가하면 됩니다
         // { id: 'newuser', pw: 'newpass' },
     ];
@@ -686,16 +692,14 @@
             title: '[함수] #17: 676767676767676767(for,while)',
             content: '<p>요즘 초딩들이 미쳐서 67만 외치고 다닌다</p><p>한 아동전문가가 이런 67유행에 맞춰서 함수를 이용해 입력 받은 숫자만큼 67을 출력하는 코드를 짤려고 하는데, 개빡통이였다</p><p>우리가 함수와 반복문(for,while)을 이용해 입력받은 수 만큼 67을 반복해 출력하는 코드를 작성하시오</p><hr><p><b>야르</b></p>',
             testCases: [
-                { input: '3', expected: '67\n67\n67' },
-                { input: '4', expected: '67\n67\n67\n67' },
+                { input: '', expected: '피카츄\n백만볼트\n파이리\n화염방사\n꼬부기\n물대포\n이상해씨\n덩굴채찍' },
             ]
         },
         '18': {
-            title: '[함수] #18: 676767676767676767(제귀함수)',
+            title: '[함수] #17: 676767676767676767(제귀함수)',
             content: '<p>요즘 초딩들이 미쳐서 67만 외치고 다닌다</p><p>한 아동전문가가 이런 67유행에 맞춰서 함수를 이용해 입력 받은 숫자만큼 67을 출력하는 코드를 짤려고 하는데, 개빡통이였다</p><p>우리가 제귀함수를 이용해 입력받은 수 만큼 67을 반복해 출력하는 코드를 작성하시오</p><hr><p><b>야르</b></p>',
             testCases: [
-                { input: '3', expected: '67\n67\n67' },
-                { input: '4', expected: '67\n67\n67\n67' },
+                { input: '', expected: '피카츄\n백만볼트\n파이리\n화염방사\n꼬부기\n물대포\n이상해씨\n덩굴채찍' },
             ]
         },
     };
@@ -997,21 +1001,28 @@ def input(p=''): return input_data.pop(0) if input_data else ""
     function saveSubmission(problemId, result) {
         const session = getSession();
         if (!session) return;
-
-        const history = getSubmissionHistory();
-
-        history.unshift({
+        const entry = {
             user: session.id,
             problemId,
             result,
             time: new Date().toLocaleString()
-        });
-
+        };
+        // Firebase에 저장
+        db.ref('submissions').push(entry);
+        // 로컬에도 저장 (빠른 UI 반응용)
+        const history = getSubmissionHistory();
+        history.unshift(entry);
         localStorage.setItem('submission_history', JSON.stringify(history));
     }
 
     // ── 페이지 라우팅 ──
     function renderPage(path) {
+        db.ref('submissions').once('value').then(snapshot => {
+            const data = snapshot.val();
+            const list = data ? Object.values(data).reverse() : [];
+            localStorage.setItem('submission_history', JSON.stringify(list));
+        });
+         mainContent.className = '';
         mainContent.className = '';
         let route = routes[path];
         let currentProblemId = null;
