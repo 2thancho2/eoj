@@ -391,31 +391,31 @@
         if (userId === 'admin') return { name: 'Grandmaster', color: '#c0392b', img: '그랜드마스터 URL', rank: 99 };
 
         const tiers = [
-            { name: 'Bronze V',   min: 0,   color: '#cd7f32' },
-            { name: 'Bronze IV',  min: 5,   color: '#cd7f32' },
-            { name: 'Bronze III', min: 10,  color: '#cd7f32' },
-            { name: 'Bronze II',  min: 15,  color: '#cd7f32' },
-            { name: 'Bronze I',   min: 20,  color: '#cd7f32' },
-            { name: 'Silver V',   min: 25,  color: '#a0a0a0' },
-            { name: 'Silver IV',  min: 32,  color: '#a0a0a0' },
-            { name: 'Silver III', min: 39,  color: '#a0a0a0' },
-            { name: 'Silver II',  min: 46,  color: '#a0a0a0' },
-            { name: 'Silver I',   min: 53,  color: '#a0a0a0' },
-            { name: 'Gold V',     min: 60,  color: '#f1c40f' },
-            { name: 'Gold IV',    min: 70,  color: '#f1c40f' },
-            { name: 'Gold III',   min: 80,  color: '#f1c40f' },
-            { name: 'Gold II',    min: 90,  color: '#f1c40f' },
-            { name: 'Gold I',     min: 100, color: '#f1c40f' },
-            { name: 'Platinum V', min: 110, color: '#00c8ff' },
-            { name: 'Platinum IV',min: 125, color: '#00c8ff' },
-            { name: 'Platinum III',min:140, color: '#00c8ff' },
-            { name: 'Platinum II',min: 155, color: '#00c8ff' },
-            { name: 'Platinum I', min: 170, color: '#00c8ff' },
-            { name: 'Master V',   min: 185, color: '#9b59b6' },
-            { name: 'Master IV',  min: 205, color: '#9b59b6' },
-            { name: 'Master III', min: 225, color: '#9b59b6' },
-            { name: 'Master II',  min: 245, color: '#9b59b6' },
-            { name: 'Master I',   min: 265, color: '#9b59b6' },
+            { name: 'Bronze V',   min: 29,   color: '#cd7f32' },
+            { name: 'Bronze IV',  min: 59,   color: '#cd7f32' },
+            { name: 'Bronze III', min: 89,  color: '#cd7f32' },
+            { name: 'Bronze II',  min: 119,  color: '#cd7f32' },
+            { name: 'Bronze I',   min: 149,  color: '#cd7f32' },
+            { name: 'Silver V',   min: 199,  color: '#a0a0a0' },
+            { name: 'Silver IV',  min: 249,  color: '#a0a0a0' },
+            { name: 'Silver III', min: 299,  color: '#a0a0a0' },
+            { name: 'Silver II',  min: 349,  color: '#a0a0a0' },
+            { name: 'Silver I',   min: 299,  color: '#a0a0a0' },
+            { name: 'Gold V',     min: 499,  color: '#f1c40f' },
+            { name: 'Gold IV',    min: 599,  color: '#f1c40f' },
+            { name: 'Gold III',   min: 699,  color: '#f1c40f' },
+            { name: 'Gold II',    min: 799,  color: '#f1c40f' },
+            { name: 'Gold I',     min: 949, color: '#f1c40f' },
+            { name: 'Platinum V', min: 1099, color: '#00c8ff' },
+            { name: 'Platinum IV',min: 1249, color: '#00c8ff' },
+            { name: 'Platinum III',min:1399, color: '#00c8ff' },
+            { name: 'Platinum II',min: 1549, color: '#00c8ff' },
+            { name: 'Platinum I', min: 1749, color: '#00c8ff' },
+            { name: 'Master V',   min: 1949, color: '#9b59b6' },
+            { name: 'Master IV',  min: 2149, color: '#9b59b6' },
+            { name: 'Master III', min: 2349, color: '#9b59b6' },
+            { name: 'Master II',  min: 2539, color: '#9b59b6' },
+            { name: 'Master I',   min: 2699, color: '#9b59b6' },
         ];
 
 
@@ -949,10 +949,10 @@ function getUserScore(userId) {
             // 점수 기준으로 문제 난이도 티어 표시
             let diffColor = '#cd7f32';
             let diffName = 'Bronze';
-            if (score >= 5) { diffColor = '#9b59b6'; diffName = 'Master'; }
-            else if (score >= 4) { diffColor = '#00c8ff'; diffName = 'Platinum'; }
-            else if (score >= 3) { diffColor = '#f1c40f'; diffName = 'Gold'; }
-            else if (score >= 2) { diffColor = '#a0a0a0'; diffName = 'Silver'; }
+            if (score >= 21) { diffColor = '#9b59b6'; diffName = 'Master'; }
+            else if (score >= 16) { diffColor = '#00c8ff'; diffName = 'Platinum'; }
+            else if (score >= 11) { diffColor = '#f1c40f'; diffName = 'Gold'; }
+            else if (score >= 6) { diffColor = '#a0a0a0'; diffName = 'Silver'; }
 
             html += `
                 <li>
