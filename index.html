@@ -634,20 +634,10 @@ function getUserScore(userId) {
         renderPage(location.hash.substring(1) || '');
     }
     function setProblemScore(problemId) {
-        if (getSession()?.id !== 'admin') return;
+        if (!ADMINS.includes(getSession()?.id)) return alert('관리자만 가능합니다.');
         const val = parseInt(document.getElementById('score-input').value);
         if (isNaN(val) || val < 1) return alert('올바른 점수를 입력하세요');
         problemData[problemId].score = val;
-        db.ref(`problemScores/${problemId}`).set(val);
-        alert(`문제 ${problemId}번 점수가 ${val}점으로 저장됐어요!`);
-        renderPage(location.hash.substring(1) || '');
-    }
-    function setProblemScore(problemId) {
-        if (getSession()?.id !== 'admin') return;
-        const val = parseInt(document.getElementById('score-input').value);
-        if (isNaN(val) || val < 1) return alert('올바른 점수를 입력하세요');
-        problemData[problemId].score = val;
-        // Firebase에도 저장
         db.ref(`problemScores/${problemId}`).set(val);
         alert(`문제 ${problemId}번 점수가 ${val}점으로 설정됐어요!`);
         renderPage(location.hash.substring(1) || '');
@@ -1063,7 +1053,7 @@ setTimeout(() => filterCat('전체'), 0);
 
         const currentIdx = tiers.findIndex(t => t.name === tier.name);
         const nextTier = tiers[currentIdx + 1];
-        const nextTierHtml = session.id === 'admin'
+        const nextTierHtml = ADMINS.includes(session.id)
             ? `<p>👑 최고 등급입니다!</p>`
             : nextTier
                 ? `<p>다음 티어 <b style="color:${tier.color}">${nextTier.name}</b> 까지 <b>${nextTier.min - score}점</b> 남았어요!</p>`
