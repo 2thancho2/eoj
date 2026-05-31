@@ -936,51 +936,56 @@ function getUserScore(userId) {
             cssClass: 'problem-list'
         },
         '/status': {
-        title: '채점 현황',
-        contentGenerator: () => {
-            const history = getSubmissionHistory();
-            const isAdmin = getSession()?.id === 'admin';
+    title: '채점 현황',
+    contentGenerator: () => {
+        const history = getSubmissionHistory();
+        const isAdmin = getSession()?.id === 'admin';
 
-            if (history.length === 0) {
-                return '<h2>채점 현황</h2><p>아직 제출이 없습니다.</p>';
-            }
+        if (history.length === 0) {
+            return '<h2>채점 현황</h2><p>아직 제출이 없습니다.</p>';
+        }
 
-            // 유저 목록 추출
-            const users = [...new Set(history.map(h => h.user))];
-            // 문제 목록 추출
-            const problems = [...new Set(history.map(h => h.problemId))];
+        const users = [...new Set(history.map(h => h.user))];
+        const problems = [...new Set(history.map(h => h.problemId))];
 
-            let adminButtons = '';
-            if (isAdmin) {
-                adminButtons = `
-                    <div style="margin-bottom:16px; display:flex; flex-wrap:wrap; gap:8px;">
-                        <button onclick="clearAllHistory()" style="background:#e53935;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;">
-                            🗑 전체 삭제
-                        </button>
-                        <select id="del-user-select" style="padding:8px;border-radius:8px;border:1px solid #ddd;">
-                            <option value="">유저 선택</option>
-                            ${users.map(u => `<option value="${u}">${u}</option>`).join('')}
-                        </select>
-                        <button onclick="clearUserHistory(document.getElementById('del-user-select').value)" style="background:#f57c00;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;">
-                            👤 유저별 삭제
-                        </button>
-                        <select id="del-prob-select" style="padding:8px;border-radius:8px;border:1px solid #ddd;">
-                            <option value="">문제 선택</option>
-                            ${problems.map(p => `<option value="${p}">문제 ${p}번</option>`).join('')}
-                        </select>
-                        <button onclick="clearProblemHistory(document.getElementById('del-prob-select').value)" style="background:#7b1fa2;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;">
-                            📝 문제별 삭제
-                        </button>
-                    </div>
-                `;
-            }
+        let adminButtons = '';
+        if (isAdmin) {
+            adminButtons = `
+                <div style="margin-bottom:16px; display:flex; flex-wrap:wrap; gap:8px;">
+                    <button onclick="clearAllHistory()" style="background:#e53935;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;">
+                        🗑 전체 삭제
+                    </button>
+                    <select id="del-user-select" style="padding:8px;border-radius:8px;border:1px solid #ddd;">
+                        <option value="">유저 선택</option>
+                        ${users.map(u => `<option value="${u}">${u}</option>`).join('')}
+                    </select>
+                    <button onclick="clearUserHistory(document.getElementById('del-user-select').value)" style="background:#f57c00;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;">
+                        👤 유저별 삭제
+                    </button>
+                    <select id="del-prob-select" style="padding:8px;border-radius:8px;border:1px solid #ddd;">
+                        <option value="">문제 선택</option>
+                        ${problems.map(p => `<option value="${p}">문제 ${p}번</option>`).join('')}
+                    </select>
+                    <button onclick="clearProblemHistory(document.getElementById('del-prob-select').value)" style="background:#7b1fa2;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;">
+                        📝 문제별 삭제
+                    </button>
+                </div>
+            `;
+        }
+
+        let html = `<h2>채점 현황</h2>${adminButtons}<div class="problem-list"><ul>`;
+
+        history.forEach((h, idx) => {
+            const resultColor = h.result === '맞았습니다' ? '#2e7d32' : '#c62828';
+            const deleteBtn = isAdmin
+                ? `<button onclick="deleteOneEntry(${idx})" style="float:right;background:#eee;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;">삭제</button>`
+                : '';
             const codeBtn = isAdmin && h.code
                 ? `<details style="margin-top:6px;">
                      <summary style="cursor:pointer;font-size:12px;color:#6c5ce7;">코드 보기</summary>
                      <pre style="background:#1e1e2e;color:#cdd6f4;padding:10px;border-radius:6px;font-size:12px;margin-top:4px;overflow-x:auto;">${h.code.replace(/</g,'&lt;')}</pre>
                    </details>`
                 : '';
-            
             html += `
                 <li>
                     ${deleteBtn}
@@ -990,32 +995,16 @@ function getUserScore(userId) {
                     ${codeBtn}
                 </li>
             `;
-            let html = `<h2>채점 현황</h2>${adminButtons}<div class="problem-list"><ul>`;
+        });
 
-            history.forEach((h, idx) => {
-                const resultColor = h.result === '맞았습니다' ? '#2e7d32' : '#c62828';
-                const deleteBtn = isAdmin
-                    ? `<button onclick="deleteOneEntry(${idx})" style="float:right;background:#eee;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;">삭제</button>`
-                    : '';
-                html += `
-                    <li>
-                        ${deleteBtn}
-                        <b>${h.user}</b> - 문제 ${h.problemId} -
-                        <span style="color:${resultColor};font-weight:bold;">${h.result}</span>
-                        <br><small>${h.time}</small>
-                    </li>
-                `;
-            });
-
-            html += '</ul></div>';
-            return html;
-        },
-        cssClass: 'problem-list'
+        html += '</ul></div>';
+        return html;
     },
+    cssClass: 'problem-list'
+},
     '/problems': {
     title: 'problem list',
     contentGenerator: () => {
-        let html = '<h2>문제</h2><div class="problem-list"><ul>';
         for (const id in problemData) {
             const score = problemData[id].score || 5;
             const tier = getTier('dummy', score <= 4 ? 0 : score <= 9 ? 5 : score <= 14 ? 25 : score <= 19 ? 60 : 110);
