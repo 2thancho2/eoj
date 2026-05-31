@@ -1409,37 +1409,26 @@ def input(p=''): return input_data.pop(0) if input_data else ""
                 route = {
                     title: problemData[currentProblemId].title,
                     contentGenerator: () => `
-                        <h2 class="problem-title">${problemData[currentProblemId].title}</h2>
-                        <div class="problem-tabs">
-                            <button class="tab-button" data-tab="problem" data-problem-id="${currentProblemId}">문제</button>
-                            <button class="tab-button" data-tab="submission" data-problem-id="${currentProblemId}">제출</button>
-                            <button class="tab-button" data-tab="status" data-problem-id="${currentProblemId}">채점현황</button>
-                        </div>
-                        <div class="tab-content-container">
-                            <div id="problem-tab-content" class="tab-pane">
-                                <div class="problem-detail-content">
-                                    ${problemData[currentProblemId].content}
-                                </div>
-                            </div>
-                            <div class="tab-content-container">
-
-                                <div id="problem-tab-content" class="tab-pane">
-                                    <div class="problem-detail-content">
-                                        ${problemData[currentProblemId].content}
-                                    </div>
-                                </div>
-
-                                <div id="submission-tab-content" class="tab-pane">
-                                    ${buildSubmissionTab(currentProblemId)}
-                                </div>
-
-                                <div id="status-tab-content" class="tab-pane">
-                                    ${buildStatusTab(currentProblemId)}
-                                </div>
-
-                            </div>
-                        </div>
-                    `,
+    <h2 class="problem-title">${problemData[currentProblemId].title}</h2>
+    <div class="problem-tabs">
+        <button class="tab-button" data-tab="problem" data-problem-id="${currentProblemId}">문제</button>
+        <button class="tab-button" data-tab="submission" data-problem-id="${currentProblemId}">제출</button>
+        <button class="tab-button" data-tab="status" data-problem-id="${currentProblemId}">채점현황</button>
+    </div>
+    <div class="tab-content-container">
+        <div id="problem-tab-content" class="tab-pane">
+            <div class="problem-detail-content">
+                ${problemData[currentProblemId].content}
+            </div>
+        </div>
+        <div id="submission-tab-content" class="tab-pane">
+            ${buildSubmissionTab(currentProblemId)}
+        </div>
+        <div id="status-tab-content" class="tab-pane">
+            ${buildStatusTab(currentProblemId)}
+        </div>
+    </div>
+`,
                     cssClass: 'problem-detail'
                 };
             }
