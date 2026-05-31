@@ -388,7 +388,7 @@
     let devtools = false;
     const threshold = 160;
     function getTier(userId, score) {
-        if (userId === 'admin') return { name: 'Grandmaster', color: '#c0392b', img: '그랜드마스터 URL', rank: 99 };
+        if (ADMINS.includes(userId)) return { name: 'Grandmaster', color: '#c0392b', img: '그랜드마스터 URL', rank: 99 };
 
         const tiers = [
             { name: 'Bronze V',   min: 29,   color: '#cd7f32' },
@@ -453,6 +453,7 @@ function getUserScore(userId) {
     // ══════════════════════════════════════════
     //  ★ 계정 목록 — 여기서 직접 수정하세요 ★
     // ══════════════════════════════════════════
+    const ADMINS = ['admin'];  // ← 관리자 아이디 목록
     const ACCOUNTS = [
         { id: 'admin',pw: 'ethan1205!'   },
         { id: '김민종', pw: '30808' },
@@ -968,7 +969,7 @@ setTimeout(() => filterCat('전체'), 0);
     title: '채점 현황',
     contentGenerator: () => {
         const history = getSubmissionHistory();
-        const isAdmin = getSession()?.id === 'admin';
+        const isAdmin = ADMINS.includes(getSession()?.id);
 
         if (history.length === 0) {
             return '<h2>채점 현황</h2><p>아직 제출이 없습니다.</p>';
@@ -1118,8 +1119,8 @@ setTimeout(() => filterCat('전체'), 0);
             }).sort((a, b) => b.score - a.score || a.userId.localeCompare(b.userId));
 
             // admin은 별도로 최상단에
-            const adminEntry = rankData.find(r => r.userId === 'admin');
-            const others = rankData.filter(r => r.userId !== 'admin');
+            const adminEntry = rankData.find(r => ADMINS.includes(r.userId));
+            const others = rankData.filter(r => !ADMINS.includes(r.userId));
             const sorted = adminEntry ? [adminEntry, ...others] : others;
 
             if (sorted.length === 0) {
@@ -1184,7 +1185,7 @@ setTimeout(() => filterCat('전체'), 0);
                         font-size:17px;
                         font-weight:bold;
                     ">
-                        👑 Grandmaster &nbsp;|&nbsp; admin
+                        👑 Grandmaster &nbsp;|&nbsp; ${adminEntry.userId}
                     </div>
                 ` + html.replace('<h2>🏆 랭킹</h2>', '');
             }
