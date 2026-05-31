@@ -957,8 +957,10 @@ function getUserScore(userId) {
 
         problemsHtml += `</ul></div></div>`;
     }
-
+    // 렌더링 직후 전체 필터 적용
+setTimeout(() => filterCat('전체'), 0);
     return `<h2>문제</h2>${filterHtml}<div id="problems-container">${problemsHtml}</div>`;
+                
 },
             cssClass: 'problem-list'
         },
@@ -1524,14 +1526,63 @@ def input(p=''): return input_data.pop(0) if input_data else ""
         }
     });
 
-    // 카테고리 필터링
-    document.querySelectorAll('.cat-group').forEach(group => {
-        if (cat === '전체' || group.dataset.cat === cat) {
-            group.style.display = 'block';
-        } else {
-            group.style.display = 'none';
+    const container = document.getElementById('problems-container');
+
+    if (cat === '전체') {
+        // 전체: 카테고리 헤더 숨기고 문제만 번호순으로 flat하게
+        document.querySelectorAll('.cat-group').forEach(group => group.style.display = 'none');
+
+        let flatHtml = '<div class="problem-list"><ul>';
+        // problemData는 키가 숫자 순서이므로 그냥 순서대로
+        for (const id in problemData) {
+            const score = problemData[id].score || 5;
+            let diffColor = '#cd7f32', diffName = 'Bronze';
+            if (score >= 21) { diffColor = '#9b59b6'; diffName = 'Master'; }
+            else if (score >= 16) { diffColor = '#00c8ff'; diffName = 'Platinum'; }
+            else if (score >= 11) { diffColor = '#f1c40f'; diffName = 'Gold'; }
+            else if (score >= 6) { diffColor = '#a0a0a0'; diffName = 'Silver'; }
+
+            const history = JSON.parse(localStorage.getItem('submission_history') || '[]');
+            const session = JSON.parse(sessionStorage.getItem('oj_session') || 'null');
+            let statusIcon = '';
+            if (session) {
+                const myHistory = history.filter(h => h.user === session.id && String(h.problemId) === String(id));
+                const solved = myHistory.some(h => h.result === '맞았습니다');
+                const tried = myHistory.some(h => h.result === '틀렸습니다');
+                if (solved) statusIcon = `<span style="color:#4caf50;font-size:18px;margin-right:6px;">✔</span>`;
+                else if (tried) statusIcon = `<span style="color:#e53935;font-size:18px;margin-right:6px;">✖</span>`;
+                else statusIcon = `<span style="color:#ddd;font-size:18px;margin-right:6px;">○</span>`;
+            }
+
+            flatHtml += `
+                <li style="display:flex;align-items:center;">
+                    ${statusIcon}
+                    <a href="#/problems/${id}" data-path="/problems/${id}" style="flex:1;">
+                        <span style="color:${diffColor};font-weight:bold;margin-right:8px;">[${diffName} ${score}점]</span>
+                        ${problemData[id].title}
+                    </a>
+                </li>
+            `;
         }
-    });
+        flatHtml += '</ul></div>';
+
+        // 기존 flat-list 있으면 제거 후 다시 추가
+        const existing = document.getElementById('flat-list');
+        if (existing) existing.remove();
+        const div = document.createElement('div');
+        div.id = 'flat-list';
+        div.innerHTML = flatHtml;
+        container.appendChild(div);
+
+    } else {
+        // 특정 카테고리: flat-list 숨기고 카테고리 그룹 표시
+        const existing = document.getElementById('flat-list');
+        if (existing) existing.remove();
+
+        document.querySelectorAll('.cat-group').forEach(group => {
+            group.style.display = group.dataset.cat === cat ? 'block' : 'none';
+        });
+    }
 }
     </script>
 </body>
