@@ -885,54 +885,81 @@ function getUserScore(userId) {
         '/problems': {
             title: 'problem list',
             contentGenerator: () => {
-                // 카테고리별로 문제 그룹핑
-                const groups = {};
-                for (const id in problemData) {
-                    const cat = problemData[id].category || '기타';
-                    if (!groups[cat]) groups[cat] = [];
-                    groups[cat].push(id);
-                }
-        
-                let html = '<h2>문제</h2>';
-        
-                for (const cat in groups) {
-                    html += `
-                        <div style="margin-bottom:24px;">
-                            <div style="
-                                font-size:17px; font-weight:bold;
-                                border-left:4px solid #6c5ce7;
-                                padding:6px 14px;
-                                background:#f5f3ff;
-                                border-radius:0 8px 8px 0;
-                                margin-bottom:10px;
-                                color:#6c5ce7;
-                            ">📂 ${cat}</div>
-                            <div class="problem-list"><ul>
-                    `;
-        
-                    groups[cat].forEach(id => {
-                        const score = problemData[id].score || 5;
-                        let diffColor = '#cd7f32', diffName = 'Bronze';
-                        if (score >= 21) { diffColor = '#9b59b6'; diffName = 'Master'; }
-                        else if (score >= 16) { diffColor = '#00c8ff'; diffName = 'Platinum'; }
-                        else if (score >= 11) { diffColor = '#f1c40f'; diffName = 'Gold'; }
-                        else if (score >= 6) { diffColor = '#a0a0a0'; diffName = 'Silver'; }
-        
-                        html += `
-                            <li>
-                                <a href="#/problems/${id}" data-path="/problems/${id}">
-                                    <span style="color:${diffColor};font-weight:bold;margin-right:8px;">[${diffName} ${score}점]</span>
-                                    ${problemData[id].title}
-                                </a>
-                            </li>
-                        `;
-                    });
-        
-                    html += `</ul></div></div>`;
-                }
-        
-                return html;
-            },
+    const history = getSubmissionHistory();
+    const session = getSession();
+
+    // 카테고리 목록 추출
+    const allCats = [...new Set(Object.values(problemData).map(p => p.category || '기타'))];
+
+    // 필터 버튼 HTML
+    let filterHtml = `
+        <div id="cat-filter" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+            <button onclick="filterCat('전체')" class="cat-btn active" data-cat="전체"
+                style="padding:7px 16px;border:none;border-radius:20px;cursor:pointer;font-weight:bold;background:#6c5ce7;color:white;font-size:14px;">
+                전체
+            </button>
+            ${allCats.map(cat => `
+                <button onclick="filterCat('${cat}')" class="cat-btn" data-cat="${cat}"
+                    style="padding:7px 16px;border:none;border-radius:20px;cursor:pointer;font-weight:bold;background:#eee;color:#555;font-size:14px;">
+                    ${cat}
+                </button>
+            `).join('')}
+        </div>
+    `;
+
+    // 카테고리별 그룹핑
+    const groups = {};
+    for (const id in problemData) {
+        const cat = problemData[id].category || '기타';
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(id);
+    }
+
+    let problemsHtml = '';
+    for (const cat in groups) {
+        problemsHtml += `<div class="cat-group" data-cat="${cat}" style="margin-bottom:24px;">`;
+        problemsHtml += `
+            <div style="font-size:17px;font-weight:bold;border-left:4px solid #6c5ce7;padding:6px 14px;background:#f5f3ff;border-radius:0 8px 8px 0;margin-bottom:10px;color:#6c5ce7;">
+                📂 ${cat}
+            </div>
+            <div class="problem-list"><ul>
+        `;
+
+        groups[cat].forEach(id => {
+            const score = problemData[id].score || 5;
+            let diffColor = '#cd7f32', diffName = 'Bronze';
+            if (score >= 21) { diffColor = '#9b59b6'; diffName = 'Master'; }
+            else if (score >= 16) { diffColor = '#00c8ff'; diffName = 'Platinum'; }
+            else if (score >= 11) { diffColor = '#f1c40f'; diffName = 'Gold'; }
+            else if (score >= 6) { diffColor = '#a0a0a0'; diffName = 'Silver'; }
+
+            // 풀었는지 틀렸는지 확인
+            let statusIcon = '';
+            if (session) {
+                const myHistory = history.filter(h => h.user === session.id && String(h.problemId) === String(id));
+                const solved = myHistory.some(h => h.result === '맞았습니다');
+                const tried = myHistory.some(h => h.result === '틀렸습니다');
+                if (solved) statusIcon = `<span style="color:#4caf50;font-size:18px;margin-right:6px;">✔</span>`;
+                else if (tried) statusIcon = `<span style="color:#e53935;font-size:18px;margin-right:6px;">✖</span>`;
+                else statusIcon = `<span style="color:#ddd;font-size:18px;margin-right:6px;">○</span>`;
+            }
+
+            problemsHtml += `
+                <li style="display:flex;align-items:center;">
+                    ${statusIcon}
+                    <a href="#/problems/${id}" data-path="/problems/${id}" style="flex:1;">
+                        <span style="color:${diffColor};font-weight:bold;margin-right:8px;">[${diffName} ${score}점]</span>
+                        ${problemData[id].title}
+                    </a>
+                </li>
+            `;
+        });
+
+        problemsHtml += `</ul></div></div>`;
+    }
+
+    return `<h2>문제</h2>${filterHtml}<div id="problems-container">${problemsHtml}</div>`;
+},
             cssClass: 'problem-list'
         },
         '/status': {
@@ -1485,6 +1512,27 @@ def input(p=''): return input_data.pop(0) if input_data else ""
             }
         });
     });
+    function filterCat(cat) {
+    // 버튼 스타일 토글
+    document.querySelectorAll('.cat-btn').forEach(btn => {
+        if (btn.dataset.cat === cat) {
+            btn.style.background = '#6c5ce7';
+            btn.style.color = 'white';
+        } else {
+            btn.style.background = '#eee';
+            btn.style.color = '#555';
+        }
+    });
+
+    // 카테고리 필터링
+    document.querySelectorAll('.cat-group').forEach(group => {
+        if (cat === '전체' || group.dataset.cat === cat) {
+            group.style.display = 'block';
+        } else {
+            group.style.display = 'none';
+        }
+    });
+}
     </script>
 </body>
 </html>
