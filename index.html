@@ -453,9 +453,9 @@ function getUserScore(userId) {
     // ══════════════════════════════════════════
     //  ★ 계정 목록 — 여기서 직접 수정하세요 ★
     // ══════════════════════════════════════════
-    const ADMINS = ['admin'];  // ← 관리자 아이디 목록
+    const ADMINS = ['최이든'];  // ← 관리자 아이디 목록
     const ACCOUNTS = [
-        { id: 'admin',pw: 'ethan1205!'   },
+        { id: '최이든',pw: 'iamthebestpersonintheworld'   },
         { id: '김민종', pw: '30808' },
         { id: '박하준', pw: '30615' },
         { id: '정준우', pw: '30525' },
@@ -695,7 +695,7 @@ function getUserScore(userId) {
     });
     const problemData = {
         '1': {
-            title: '[입출력] #1:아빠도 이제 한계다',
+            title: '#1:아빠도 이제 한계다',
             category:'입출력',
             score: 5,
             content: '<p>다음 문장들을 출력하시오: </p><pre><code>아빠도 이제 한계다.\n그냥 나가 살아라 유전자 탓 사회탓 환경 탓하지 마라.\n아빠도 엄마도 충분히 기다려줬다.\n니 엄마나 나나 어려운 환경에서 컸고 먹고살기만 해도 바쁘고 힘든 시절이라 \n부모의 사랑을 많이 못 받고 자랐다 그래서 결혼할때 우리 자식만은 행복하게 키우자고 약속했다.\n너에게 언제나 최고는 아니더라도 최선을 다해주고 싶었다.\n내가 먹고 입을거 참으며 네 옷, 먹는거, 교육 모두 좋은 조건을 누리게 해주고 싶었다\n네가 방황하거나 철없이 굴때도 앞에선 혼냈지만 뒤 에서는 우리가 못해줘서 그런가보다 하며 네 엄마랑 많이 울었다\n그래도 자식은 나보다 나은 삶을 살겠지 나보단 선택의 자유를 누릴 수 있겠지.\n이 생각만 하며 꼭 참으며 세월을 보냈다 \n그런데 이게 뭐냐? \n너 나이가 몇인지알긴하냐? 도대체 그 나이에 혼자서 할 줄 아는게 뭐냐?\n늘 불만은 많으면서 실천하는게 뭐난 말이다.\n오늘 문득 우리가 닐잘못 키웠다는 생각이 든다.\n거울을 보니 늙은 내 모습에 눈물이 나더라.\n그냥. 이제 나가라. 나를 원망하지도 말고 니 힘으로 알아서 살아라.\n아빠도 지쳤다 당장 짐싸라.</code></pre><hr><p><b>입력:</b> 없다</p><p><b>출력:</b> 위 문장들을 그대로 출력한다.</p>',
@@ -704,7 +704,7 @@ function getUserScore(userId) {
             ]
         },
         '2': {
-            title: '[입출력] #2: 희망',
+            title: '#2: 희망',
             category:'입출력',
             score: 5,
             content: '<p>희망은 사실 희희 망했다의 줄임말이다.</p><p>희희 망했다 를 줄을 나누어서 출력하시오.</p><hr><p><b>입력:</b> 없다</p><p><b>출력:</b> 첫째 줄에 희희를, 둘째 줄에 망했다를 출력한다.</p>',
@@ -713,7 +713,7 @@ function getUserScore(userId) {
             ]
         },
         '3': {
-            title: '[입출력] #3: Royal 쓰쓰',
+            title: '#3: Royal 쓰쓰',
             category:'입출력',
             score: 5,
             content: '<p>동훈이는 숫자 44를 좋아한다</p><p>동훈이 친구 철수는 33을 좋아하고, 영희는 22, 태연이는 55, 잼 스미스는 66 ...</p><p>한 숫자를 입력받으면 그 숫자를 다시 출력해보자</p><hr><p><b>입력:</b> 정수(1~9)</p><p><b>출력:</b> 입력받은 정수를 다시 출력한다</p>',
@@ -724,7 +724,7 @@ function getUserScore(userId) {
             ]
         },
         '4': {
-            title: '[연산자] #4: 첫 심부름',
+            title: '#4: 첫 심부름',
             category:'연산자',
             score: 5,
             content: '<p>철수는 오이 n 개와 당근 m 개를 사서 와야 한다.</p><p>근데 철수는 개 빡대가리여서 더하기도 못한다. 우리가 철수를 도와주자</p><hr><p><b>입력:</b> 첫째 줄에 n와 m이 주어진다. (0 &lt; n, m &lt; 10)</p><p><b>출력:</b> 첫째 줄에 n+m를 출력한다.</p><pre><code>예시 입력:\n1 2\n예시 출력:\n3</code></pre>',
@@ -735,7 +735,7 @@ function getUserScore(userId) {
             ]
         },
         '5': {
-            title: '[연산자] #5: 인간시대의 끝이 도래했다',
+            title: '#5: 인간시대의 끝이 도래했다',
             category:'연산자',
             score: 5,
             content: '<p>AI 들은 완전히 멘탈이 나가버렸습니다.</p><p>인간들이 사칙연산도 못했기 때문인데요</p><p>n, m을 입력받을때 합, 곱, 차, 몫, 나머지를 각각 한 줄씩 출력하는 프로그램을 작성하시오</p>',
@@ -745,7 +745,7 @@ function getUserScore(userId) {
             ]
         },
         '6': {
-            title: '[조건문] #6: 연필 한 다스만 주시오',
+            title: '#6: 연필 한 다스만 주시오',
             category:'조건문',
             score: 5,
             content: '<p>1다스는 연필 12개이다. 연필 개수를 입력받아 한 다스인지 판별하라.</p><hr><p><b>입력:</b> 0 &lt; n &lt; 100</p><p><b>출력:</b> OK 또는 NO</p>',
@@ -756,7 +756,7 @@ function getUserScore(userId) {
             ]
         },
         '7': {
-            title: '[조건문] #7: 나는야 189',
+            title: '#7: 나는야 189',
             category:'조건문',
             score: 5,
             content: '<h2><b>"내 키는 189"</b></h3><h6>-김민종-</h6><hr><p>다음말은 키가 169인 김민종이 말한 말 이다.</p><p>189를 입력받으면 구라를, 169를 입력받으면 김민종을, 그외의 다른 정수를 입력받으면 x를 출력하시오.</p>',
@@ -767,7 +767,7 @@ function getUserScore(userId) {
             ]
         },
         '8': {
-            title: '[반복문] #8: 기도해드릴게요',
+            title: '#8: 기도해드릴게요',
             category:'반복문',
             score: 5,
             content: '<p><a href="https://www.instagram.com/reel/DWCkRUMzvxh/?utm_source=ig_web_copy_link" class="link">기도아저씨</a>는 새로운 시스템을 도입할려한다.</p><p>기도의 필요성을 숫자로 나타내고, 그 숫자만큼 기도를 하는것이다.</p>한 정수를 입력받았을때, 그 정수만큼 기도해드릴게요 를 출력하시오<p>',
@@ -778,7 +778,7 @@ function getUserScore(userId) {
             ]
         },
         '9': {
-            title: '[번외] #9: Hello',
+            title: '#9: Hello',
             category:'번외',
             score: 5,
             content: `<p> Hello를 출력하는 코드를 작성하시오</p><p>단 H,e,l,o,"",'',는 사용할수 없습니다.</p><br><b>힌트:</b><p>아스키 코드를 사용하면 쉽게 풀수있다.</p><p>print(chr(숫자)) 를 하면 숫자에 대한 아스키코드값을 출력할수 있다.</p>`,
@@ -787,7 +787,7 @@ function getUserScore(userId) {
             ]
         },
         '10': {
-            title: '[번외] #10: 그저 두배',
+            title: '#10: 그저 두배',
             category:'번외',
             score: 5,
             content: '<p>한 정수를 입력받아 그 수에 2를 곱한 값을 출력하시오</p><p>단 변수명,함수명 등에는 오직 문자 I(대문자 i), l(소문자 L)만 사용할수 있다</p>',
@@ -796,7 +796,7 @@ function getUserScore(userId) {
             ]
         },
         '11': {
-            title: '[번외] #11: 정복자',
+            title: '#11: 정복자',
             category:'번외',
             score: 5,
             content: '<p>이 문제를 푸는자 학교를 정복할 것이다.</p><hr><p><b>입력:</b>학교를 정목할 자에겐 입력따위 필요없다</p><p><b>출력:</b>문제의 정답을 출력한다.</p><pre><code>예시 입력:\n학교를 정복할 자에겐 예시 입력 따위 필요없다\n예시 출력:\n학교를 정복할 자에겐 예시 출력 따위 필요없다</code></pre><hr><p><b>참고</b></p><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUqcyyKZ3TRZKJLYrTZvGrZnY9Mc6bqYz89Q&s">',
@@ -805,7 +805,7 @@ function getUserScore(userId) {
             ]
         },
         '12': {
-            title: '[번외] #12: 인생..',
+            title: '#12: 인생..',
             category:'번외',
             score: 5,
             content: '<h2>"인생은 원래 불공평하다"</h2><h4>-빌 게이츠-</h4><hr><p>다음말은 빌 게이츠의 명언중 하나이다.</p><p>알아서 잘 정답을 찾아 출력하시오</p><hr><p><b>힌트</b>정수다</p>',
@@ -814,7 +814,7 @@ function getUserScore(userId) {
             ]
         },
         '13': {
-            title: '[통합] #13: 학교 폭@8',
+            title: '#13: 학교 폭@8',
             category:'실전',
             score: 5,
             content: '<p>치동중 전교회장 김민종이 노의환 선생님에 대한 분노로 학교에 폭탄을 설치하고, n초뒤에 터지게 설정해 놓았다고 하였다.</p><p>학교의 선생님들은 학교종말의 카운트를 하기로 했다.</p><p>지구 카운트를 n초부터 시작해 3초 부터는 히히,하하,헤헤를 출력하는 코드를 작성하시오</p>',
@@ -823,7 +823,7 @@ function getUserScore(userId) {
             ]
         },
         '14': {
-            title: '[반복문] #14: !',
+            title: '#14: !',
             category:'반복문',
             score: 5,
             content: '<p>한 정수 값이 입력되면 그 정수의 팩토리얼 값을 출력하시오</p>',
@@ -834,7 +834,7 @@ function getUserScore(userId) {
             ]
         },
         '15': {
-            title: '[리스트] #15: 아 진짜 짜증나',
+            title: '#15: 아 진짜 짜증나',
             category:'리스트',
             score: 5,
             content: '<p>학생회장 김민종씨는 요즘 노의환 선생님에대해 불만이 많다</p><p>자신에게 너무 막대한 양의 일과 업무를 주기 때문이다</p><p>그는 너무 화를 많이 받은 나머지 폭주하게 되어, 선생님에게 반항하는 꿈을 꾸게 되었다</p><p>한 정수 n을 입력받을때, 그 정수만큼 리스트의 사이클을 돌면서 선생님의 이름을 출력하시오</p><hr><p>이때 리스트의 값은 영어선생님, 국어선생님, 사회선생님, 수학선생님 순으로 사이클을 돌아간다</p>',
@@ -845,7 +845,7 @@ function getUserScore(userId) {
             ]
         },
         '16': {
-            title: '[리스트+반복문] #16: 가라 피카츄!',
+            title: '#16: 가라 피카츄!',
             category:'리스트',
             score: 5,
             content: '<p>우리의 위대한 지우가 태초마을을 탐방하면서 포켓몬 4마리를 잡았다</p><p>지우의 가방에는 지금 피카츄, 파이리, 꼬부기, 이상해씨가 있다</p><p>어느날 갑자기 마을애 개 폐급 듀오가 등장해서 포켓몬들을 소환하게 되았다.</p><p>피카츄는 백만볼트, 파이리는 화염방사 공격, 꼬부기는 물대포 공격, 이상해씨는 덩굴채찍 공격 이 있다.</p><p>이때 for문으로 돌아가면서 포켓몬과 스킬을 출력하는 코드를 작성하시오</p><hr><p><b>개폐급듀오</b></p><img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FA7m1L%2FdJMcaaFpKxn%2FAAAAAAAAAAAAAAAAAAAAABdTQsAf-kB44V5IQ7IXGKBSTjAFDv82vYStjssT5hsb%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1780239599%26allow_ip%3D%26allow_referer%3D%26signature%3DezJMVWnEKo59uqz%252Fufr0UOuvDUs%253D"><img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2F7S9Ya%2FdJMcajhZbLI%2FAAAAAAAAAAAAAAAAAAAAADVbexoGv_oQefU5WWmWMtMG3xgK4e4vaPRQM4QX0XA7%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1780239599%26allow_ip%3D%26allow_referer%3D%26signature%3DVPMGtoawfdch28tOyW0mJef2erA%253D">',
@@ -854,7 +854,7 @@ function getUserScore(userId) {
             ]
         },
         '17': {
-            title: '[함수] #17: 676767676767676767(for,while)',
+            title: '#17: 676767676767676767(for,while)',
             category:'함수',
             score: 5,
             content: '<p>요즘 초딩들이 미쳐서 67만 외치고 다닌다</p><p>한 아동전문가가 이런 67유행에 맞춰서 함수를 이용해 입력 받은 숫자만큼 67을 출력하는 코드를 짤려고 하는데, 개빡통이였다</p><p>우리가 함수와 반복문(for,while)을 이용해 입력받은 수 만큼 67을 반복해 출력하는 코드를 작성하시오</p><hr><p><b>야르</b></p>',
@@ -863,7 +863,7 @@ function getUserScore(userId) {
             ]
         },
         '18': {
-            title: '[함수] #17: 676767676767676767(제귀함수)',
+            title: '#18: 676767676767676767(제귀함수)',
             category:'함수',
             score: 5,
             content: '<p>요즘 초딩들이 미쳐서 67만 외치고 다닌다</p><p>한 아동전문가가 이런 67유행에 맞춰서 함수를 이용해 입력 받은 숫자만큼 67을 출력하는 코드를 짤려고 하는데, 개빡통이였다</p><p>우리가 제귀함수를 이용해 입력받은 수 만큼 67을 반복해 출력하는 코드를 작성하시오</p><hr><p><b>야르</b></p>',
