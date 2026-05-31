@@ -1002,35 +1002,7 @@ function getUserScore(userId) {
     },
     cssClass: 'problem-list'
 },
-    '/problems': {
-    title: 'problem list',
-    contentGenerator: () => {
-        for (const id in problemData) {
-            const score = problemData[id].score || 5;
-            const tier = getTier('dummy', score <= 4 ? 0 : score <= 9 ? 5 : score <= 14 ? 25 : score <= 19 ? 60 : 110);
-
-            // 점수 기준으로 문제 난이도 티어 표시
-            let diffColor = '#cd7f32';
-            let diffName = 'Bronze';
-            if (score >= 21) { diffColor = '#9b59b6'; diffName = 'Master'; }
-            else if (score >= 16) { diffColor = '#00c8ff'; diffName = 'Platinum'; }
-            else if (score >= 11) { diffColor = '#f1c40f'; diffName = 'Gold'; }
-            else if (score >= 6) { diffColor = '#a0a0a0'; diffName = 'Silver'; }
-
-            html += `
-                <li>
-                    <a href="#/problems/${id}" data-path="/problems/${id}">
-                        <span style="color:${diffColor};font-weight:bold;margin-right:8px;">[${diffName} ${score}점]</span>
-                        ${problemData[id].title}
-                    </a>
-                </li>
-            `;
-        }
-        html += '</ul></div>';
-        return html;
-    },
-    cssClass: 'problem-list'
-},
+    
 '/mypage': {
     title: '마이페이지',
     contentGenerator: () => {
