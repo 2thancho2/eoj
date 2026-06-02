@@ -667,12 +667,26 @@ function getUserScore(userId) {
     const mypageButton = document.getElementById('mypage-btn');
     const mainContent = document.getElementById('main-content');
     mypageButton.addEventListener('click', () => {
-        const path = '/mypage';
+    const session = getSession();
+    if (!session) { openLoginModal(); return; }
 
+    if (ADMINS.includes(session.id)) {
+        // 관리자: 유저 선택 팝업
+        const users = [...new Set(getSubmissionHistory().map(h => h.user))];
+        const choices = ['(내 페이지)', ...users.filter(u => u !== session.id)];
+        const choice = prompt('마이페이지를 볼 유저를 선택하세요:\n' + choices.map((u, i) => `${i}: ${u}`).join('\n'));
+        const idx = parseInt(choice);
+        if (isNaN(idx) || idx < 0 || idx >= choices.length) return;
+        const targetUser = idx === 0 ? session.id : choices[idx];
+        const path = `/mypage/${targetUser}`;
         history.pushState({ path }, '', `#${path}`);
-
         renderPage(path);
-    });
+    } else {
+        const path = `/mypage/${session.id}`;
+        history.pushState({ path }, '', `#${path}`);
+        renderPage(path);
+    }
+});
     statusButton.addEventListener('click', () => {
         const path = '/status';
 
@@ -1217,48 +1231,30 @@ setTimeout(() => filterCat('전체'), 0);
     
     // ── 제출 탭 HTML 생성 ──
     function buildSubmissionTab(problemId) {
-        if (!isLoggedIn()) {
-            return `
-                <div class="login-required-box">
-                    <div class="lock-icon">🔒</div>
-                    <p>코드를 제출하려면 <b>로그인</b>이 필요합니다.</p>
-                    <button onclick="openLoginModal()">로그인하기</button>
-                </div>
-            `;
-        }
-
-        // admin 점수 설정 UI 추가
-         const adminPanel = ADMINS.includes(getSession()?.id) ? `
-            <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:12px 16px;margin-bottom:16px;">
-                <b>⚙️ 관리자 - 문제 점수 설정</b><br>
-                <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
-                    <label>이 문제 점수:</label>
-                    <input type="number" id="score-input" value="${problemData[problemId]?.score || 5}" min="1" max="100"
-                        style="width:70px;padding:6px;border:1px solid #ddd;border-radius:6px;">
-                    <button onclick="setProblemScore('${problemId}')"
-                        style="padding:6px 16px;background:#f57c00;color:white;border:none;border-radius:6px;cursor:pointer;">
-                        저장
-                    </button>
-                </div>
-            </div>
-        ` : '';
-
+    if (!isLoggedIn()) {
         return `
-            <div class="submission-area">
-                <div class="submission-desc">
-                    <b>채점 방법</b><br>
-                    파이썬 코드를 아래에 작성하고 <b>채점하기</b> 버튼을 누르세요!
-                    &nbsp;|&nbsp; 이 문제 점수: <b style="color:#808080;">${problemData[problemId]?.score || 5}점</b>
-                </div>
-                <label class="output-label">파이썬 코드 작성</label>
-                <textarea id="output-input" placeholder="print('Hello World')"></textarea>
-                <button id="submit-btn" onclick="judgeCode('${problemId}')">채점하기</button>
-                <div id="result-box"></div>
-                ${adminPanel}
+            <div class="login-required-box">
+                <div class="lock-icon">🔒</div>
+                <p>코드를 제출하려면 <b>로그인</b>이 필요합니다.</p>
+                <button onclick="openLoginModal()">로그인하기</button>
             </div>
         `;
     }
 
+    // ★ 추가: 이미 맞춘 문제면 재제출 막기
+    const session = getSession();
+    const alreadySolved = getSubmissionHistory().some(
+        h => h.user === session.id && String(h.problemId) === String(problemId) && h.result === '맞았습니다'
+    );
+    if (alreadySolved) {
+        return `
+            <div style="background:#efffef;border:1.5px solid #4caf50;border-radius:12px;padding:28px 20px;text-align:center;color:#2e7d32;">
+                <div style="font-size:36px;margin-bottom:10px;">✅</div>
+                <p style="font-size:16px;font-weight:bold;margin:0;">이미 맞춘 문제입니다!</p>
+                <p style="font-size:13px;color:#555;margin-top:8px;">재제출은 불가합니다.</p>
+            </div>
+        `;
+    }
     function buildStatusTab(problemId) {
         if (!isLoggedIn()) {
             return `
@@ -1410,39 +1406,90 @@ def input(p=''): return input_data.pop(0) if input_data else ""
         let currentProblemId = null;
         let currentTabName = 'problem';
 
-        if (!route && path.startsWith('/problems/')) {
-            const parts = path.substring('/problems/'.length).split('/');
-            currentProblemId = parts[0];
-            currentTabName = parts.length > 1 ? parts[1] : 'problem';
+        if (!route && path.startsWith('/mypage/')) {
+    const targetUserId = path.substring('/mypage/'.length);
+    const session = getSession();
+    const isAdmin = ADMINS.includes(session?.id);
+    const isOwner = session?.id === targetUserId;
 
-            if (problemData[currentProblemId]) {
-                route = {
-                    title: problemData[currentProblemId].title,
-                    contentGenerator: () => `
-                        <h2 class="problem-title">${problemData[currentProblemId].title}</h2>
-                        <div class="problem-tabs">
-                            <button class="tab-button" data-tab="problem" data-problem-id="${currentProblemId}">문제</button>
-                            <button class="tab-button" data-tab="submission" data-problem-id="${currentProblemId}">제출</button>
-                            <button class="tab-button" data-tab="status" data-problem-id="${currentProblemId}">채점현황</button>
-                        </div>
-                        <div class="tab-content-container">
-                            <div id="problem-tab-content" class="tab-pane">
-                                <div class="problem-detail-content">
-                                    ${problemData[currentProblemId].content}
-                                </div>
-                            </div>
-                            <div id="submission-tab-content" class="tab-pane">
-                                ${buildSubmissionTab(currentProblemId)}
-                            </div>
-                            <div id="status-tab-content" class="tab-pane">
-                                ${buildStatusTab(currentProblemId)}
-                            </div>
-                        </div>
-                    `,
-                    cssClass: 'problem-detail'
-                };
+    if (!session) {
+        route = { title: '마이페이지', contentGenerator: () => `<h2>마이페이지</h2><p>로그인이 필요합니다.</p>`, cssClass: 'problem-list' };
+    } else if (!isAdmin && !isOwner) {
+        route = { title: '마이페이지', contentGenerator: () => `<h2>마이페이지</h2><p>권한이 없습니다.</p>`, cssClass: 'problem-list' };
+    } else {
+        route = {
+            title: `${targetUserId}의 마이페이지`,
+            cssClass: 'problem-list',
+            contentGenerator: () => {
+                const score = getUserScore(targetUserId);
+                const tier = getTier(targetUserId, score);
+                const tiers = [
+                    { name: 'Bronze V', min: 0 }, { name: 'Bronze IV', min: 5 },
+                    { name: 'Bronze III', min: 10 }, { name: 'Bronze II', min: 15 },
+                    { name: 'Bronze I', min: 20 }, { name: 'Silver V', min: 25 },
+                    { name: 'Silver IV', min: 32 }, { name: 'Silver III', min: 39 },
+                    { name: 'Silver II', min: 46 }, { name: 'Silver I', min: 53 },
+                    { name: 'Gold V', min: 60 }, { name: 'Gold IV', min: 70 },
+                    { name: 'Gold III', min: 80 }, { name: 'Gold II', min: 90 },
+                    { name: 'Gold I', min: 100 }, { name: 'Platinum V', min: 110 },
+                    { name: 'Platinum IV', min: 125 }, { name: 'Platinum III', min: 140 },
+                    { name: 'Platinum II', min: 155 }, { name: 'Platinum I', min: 170 },
+                    { name: 'Master V', min: 185 }, { name: 'Master IV', min: 205 },
+                    { name: 'Master III', min: 225 }, { name: 'Master II', min: 245 },
+                    { name: 'Master I', min: 265 },
+                ];
+                const currentIdx = tiers.findIndex(t => t.name === tier.name);
+                const nextTier = tiers[currentIdx + 1];
+                const nextTierHtml = ADMINS.includes(targetUserId)
+                    ? `<p>👑 최고 등급입니다!</p>`
+                    : nextTier
+                        ? `<p>다음 티어 <b style="color:${tier.color}">${nextTier.name}</b> 까지 <b>${nextTier.min - score}점</b> 남았어요!</p>`
+                        : `<p>🎉 최고 티어입니다!</p>`;
+
+                const history = getSubmissionHistory().filter(h => h.user === targetUserId);
+                const solved = new Set(history.filter(h => h.result === '맞았습니다').map(h => h.problemId));
+
+                let html = `
+                    <h2>👤 ${targetUserId}님의 마이페이지</h2>
+                    <div style="background:#f9f9f9;border-radius:12px;padding:20px;margin-bottom:20px;">
+                        <div style="font-size:22px;font-weight:bold;color:${tier.color};">${tier.name}</div>
+                        <div style="font-size:16px;margin-top:4px;">총 점수: <b>${score}점</b></div>
+                        <div style="font-size:14px;color:#666;margin-top:2px;">푼 문제: <b>${solved.size}문제</b></div>
+                        ${nextTierHtml}
+                    </div>
+                    <div class="problem-list"><ul>
+                `;
+
+                if (history.length === 0) {
+                    html += `<p>제출 기록이 없습니다.</p>`;
+                } else {
+                    history.forEach(h => {
+                        const title = problemData[h.problemId]?.title || `문제 ${h.problemId}`;
+                        // ★ 관리자만 코드 보기
+                        const codeSection = isAdmin && h.code ? `
+                            <details style="margin-top:6px;">
+                                <summary style="cursor:pointer;font-size:12px;color:#808080;">코드 보기</summary>
+                                <pre style="background:#1e1e2e;color:#cdd6f4;padding:10px;border-radius:6px;font-size:12px;margin-top:4px;overflow-x:auto;">${h.code.replace(/</g,'&lt;')}</pre>
+                            </details>
+                        ` : '';
+                        html += `
+                            <li>
+                                <b>${title}</b><br>
+                                결과: <span style="color:${h.result === '맞았습니다' ? 'green' : 'red'};font-weight:bold;">${h.result}</span>
+                                <br>시간: ${h.time}
+                                ${codeSection}
+                            </li>
+                        `;
+                    });
+                }
+                html += `</ul></div>`;
+                return html;
             }
-        }
+        };
+    }
+}
+
+if (!route && path.startsWith('/problems/')) {
 
         if (route) {
             mainContent.innerHTML = route.contentGenerator ? route.contentGenerator() : route.content;
