@@ -1255,7 +1255,40 @@ setTimeout(() => filterCat('전체'), 0);
             </div>
         `;
     }
-    function buildStatusTab(problemId) {
+
+    // admin 점수 설정 UI
+    const adminPanel = ADMINS.includes(session.id) ? `
+        <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:12px 16px;margin-bottom:16px;">
+            <b>⚙️ 관리자 - 문제 점수 설정</b><br>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+                <label>이 문제 점수:</label>
+                <input type="number" id="score-input" value="${problemData[problemId]?.score || 5}" min="1" max="100"
+                    style="width:70px;padding:6px;border:1px solid #ddd;border-radius:6px;">
+                <button onclick="setProblemScore('${problemId}')"
+                    style="padding:6px 16px;background:#f57c00;color:white;border:none;border-radius:6px;cursor:pointer;">
+                    저장
+                </button>
+            </div>
+        </div>
+    ` : '';
+
+    return `
+        <div class="submission-area">
+            <div class="submission-desc">
+                <b>채점 방법</b><br>
+                파이썬 코드를 아래에 작성하고 <b>채점하기</b> 버튼을 누르세요!
+                &nbsp;|&nbsp; 이 문제 점수: <b style="color:#808080;">${problemData[problemId]?.score || 5}점</b>
+            </div>
+            <label class="output-label">파이썬 코드 작성</label>
+            <textarea id="output-input" placeholder="print('Hello World')"></textarea>
+            <button id="submit-btn" onclick="judgeCode('${problemId}')">채점하기</button>
+            <div id="result-box"></div>
+            ${adminPanel}
+        </div>
+    `;
+}
+
+function buildStatusTab(problemId) {
         if (!isLoggedIn()) {
             return `
                 <div class="login-required-box">
@@ -1490,6 +1523,38 @@ def input(p=''): return input_data.pop(0) if input_data else ""
 }
 
 if (!route && path.startsWith('/problems/')) {
+            const parts = path.substring('/problems/'.length).split('/');
+            currentProblemId = parts[0];
+            currentTabName = parts.length > 1 ? parts[1] : 'problem';
+
+            if (problemData[currentProblemId]) {
+                route = {
+                    title: problemData[currentProblemId].title,
+                    contentGenerator: () => `
+                        <h2 class="problem-title">${problemData[currentProblemId].title}</h2>
+                        <div class="problem-tabs">
+                            <button class="tab-button" data-tab="problem" data-problem-id="${currentProblemId}">문제</button>
+                            <button class="tab-button" data-tab="submission" data-problem-id="${currentProblemId}">제출</button>
+                            <button class="tab-button" data-tab="status" data-problem-id="${currentProblemId}">채점현황</button>
+                        </div>
+                        <div class="tab-content-container">
+                            <div id="problem-tab-content" class="tab-pane">
+                                <div class="problem-detail-content">
+                                    ${problemData[currentProblemId].content}
+                                </div>
+                            </div>
+                            <div id="submission-tab-content" class="tab-pane">
+                                ${buildSubmissionTab(currentProblemId)}
+                            </div>
+                            <div id="status-tab-content" class="tab-pane">
+                                ${buildStatusTab(currentProblemId)}
+                            </div>
+                        </div>
+                    `,
+                    cssClass: 'problem-detail'
+                };
+            }
+        }
 
         if (route) {
             mainContent.innerHTML = route.contentGenerator ? route.contentGenerator() : route.content;
