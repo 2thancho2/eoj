@@ -1119,19 +1119,37 @@ setTimeout(() => filterCat('전체'), 0);
         `;
 
         if (history.length === 0) {
-            html += `<p>제출 기록이 없습니다.</p>`;
-        } else {
-            history.forEach(h => {
-                const title = problemData[h.problemId]?.title || `문제 ${h.problemId}`;
-                html += `
-                    <li>
-                        <b>${title}</b><br>
-                        결과: <span style="color:${h.result === '맞았습니다' ? 'green' : 'red'};font-weight:bold;">${h.result}</span>
-                        <br>시간: ${h.time}
-                    </li>
-                `;
-            });
-        }
+                    html += `<p>제출 기록이 없습니다.</p>`;
+                } else {
+                    // 문제별로 최근 정답 1개, 최근 오답 1개만 추출
+                    const problemIds = [...new Set(history.map(h => h.problemId))];
+                    const filtered = [];
+                    problemIds.forEach(pid => {
+                        const entries = history.filter(h => h.problemId === pid);
+                        const latestCorrect = entries.find(h => h.result === '맞았습니다');
+                        const latestWrong   = entries.find(h => h.result === '틀렸습니다');
+                        if (latestCorrect) filtered.push(latestCorrect);
+                        else if (latestWrong) filtered.push(latestWrong);
+                    });
+
+                    filtered.forEach(h => {
+                        const title = problemData[h.problemId]?.title || `문제 ${h.problemId}`;
+                        const codeSection = isAdmin && h.code ? `
+                            <details style="margin-top:6px;">
+                                <summary style="cursor:pointer;font-size:12px;color:#808080;">코드 보기</summary>
+                                <pre style="background:#1e1e2e;color:#cdd6f4;padding:10px;border-radius:6px;font-size:12px;margin-top:4px;overflow-x:auto;">${h.code.replace(/</g,'&lt;')}</pre>
+                            </details>
+                        ` : '';
+                        html += `
+                            <li>
+                                <b>${title}</b><br>
+                                결과: <span style="color:${h.result === '맞았습니다' ? 'green' : 'red'};font-weight:bold;">${h.result}</span>
+                                <br>시간: ${h.time}
+                                ${codeSection}
+                            </li>
+                        `;
+                    });
+                }
 
         html += `</ul></div>`;
         return html;
