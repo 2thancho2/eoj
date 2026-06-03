@@ -1001,68 +1001,71 @@ setTimeout(() => filterCat('전체'), 0);
         '/status': {
     title: '채점 현황',
     contentGenerator: () => {
-        const history = getSubmissionHistory();
-        const isAdmin = ADMINS.includes(getSession()?.id);
+    const history = getSubmissionHistory();
+    const isAdmin = ADMINS.includes(getSession()?.id);
 
-        if (history.length === 0) {
-            return '<h2>채점 현황</h2><p>아직 제출이 없습니다.</p>';
-        }
+    if (history.length === 0) return '<h2>채점 현황</h2><p>아직 제출이 없습니다.</p>';
 
-        const users = [...new Set(history.map(h => h.user))];
-        const problems = [...new Set(history.map(h => h.problemId))];
+    const users    = [...new Set(history.map(h => h.user))];
+    const problems = [...new Set(history.map(h => h.problemId))];
 
-        let adminButtons = '';
-        if (isAdmin) {
-            adminButtons = `
-                <div style="margin-bottom:16px; display:flex; flex-wrap:wrap; gap:8px;">
-                    <button onclick="clearAllHistory()" style="background:#e53935;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;">
-                        🗑 전체 삭제
-                    </button>
-                    <select id="del-user-select" style="padding:8px;border-radius:8px;border:1px solid #ddd;">
-                        <option value="">유저 선택</option>
-                        ${users.map(u => `<option value="${u}">${u}</option>`).join('')}
-                    </select>
-                    <button onclick="clearUserHistory(document.getElementById('del-user-select').value)" style="background:#f57c00;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;">
-                        👤 유저별 삭제
-                    </button>
-                    <select id="del-prob-select" style="padding:8px;border-radius:8px;border:1px solid #ddd;">
-                        <option value="">문제 선택</option>
-                        ${problems.map(p => `<option value="${p}">문제 ${p}번</option>`).join('')}
-                    </select>
-                    <button onclick="clearProblemHistory(document.getElementById('del-prob-select').value)" style="background:#7b1fa2;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;">
-                        📝 문제별 삭제
-                    </button>
-                </div>
-            `;
-        }
+    // 필터 UI (관리자만)
+    let filterHtml = '';
+    if (isAdmin) {
+        filterHtml = `
+        <div style="background:#f5f5f5;border-radius:12px;padding:16px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+            <select id="filter-user" onchange="applyStatusFilter()"
+                style="padding:8px;border-radius:8px;border:1px solid #ddd;">
+                <option value="">👤 전체 유저</option>
+                ${users.map(u => `<option value="${u}">${u}</option>`).join('')}
+            </select>
+            <select id="filter-problem" onchange="applyStatusFilter()"
+                style="padding:8px;border-radius:8px;border:1px solid #ddd;">
+                <option value="">📝 전체 문제</option>
+                ${problems.map(p => `<option value="${p}">문제 ${p}번</option>`).join('')}
+            </select>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                <input type="checkbox" id="filter-correct" onchange="applyStatusFilter()"> ✅ 정답만
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                <input type="checkbox" id="filter-wrong" onchange="applyStatusFilter()"> ❌ 오답만
+            </label>
+            <button onclick="clearAllHistory()"
+                style="background:#e53935;color:white;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;margin-left:auto;">
+                🗑 전체 삭제
+            </button>
+        </div>
+        `;
+    }
 
-        let html = `<h2>채점 현황</h2>${adminButtons}<div class="problem-list"><ul>`;
-
-        history.forEach((h, idx) => {
-            const resultColor = h.result === '맞았습니다' ? '#2e7d32' : '#c62828';
-            const deleteBtn = isAdmin
-                ? `<button onclick="deleteOneEntry(${idx})" style="float:right;background:#eee;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;">삭제</button>`
-                : '';
-            const codeBtn = isAdmin && h.code
-                ? `<details style="margin-top:6px;">
-                     <summary style="cursor:pointer;font-size:12px;color:#808080;">코드 보기</summary>
-                     <pre style="background:#1e1e2e;color:#cdd6f4;padding:10px;border-radius:6px;font-size:12px;margin-top:4px;overflow-x:auto;">${h.code.replace(/</g,'&lt;')}</pre>
-                   </details>`
-                : '';
-            html += `
-                <li>
+    let listHtml = `<div id="status-list">`;
+    history.forEach((h, idx) => {
+        const resultColor = h.result === '맞았습니다' ? '#2e7d32' : '#c62828';
+        const deleteBtn = isAdmin
+            ? `<button onclick="deleteOneEntry(${idx})" style="float:right;background:#eee;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;">삭제</button>`
+            : '';
+        const codeBtn = isAdmin && h.code
+            ? `<details style="margin-top:6px;"><summary style="cursor:pointer;font-size:12px;color:#808080;">코드 보기</summary><pre style="background:#1e1e2e;color:#cdd6f4;padding:10px;border-radius:6px;font-size:12px;margin-top:4px;overflow-x:auto;">${h.code.replace(/</g,'&lt;')}</pre></details>`
+            : '';
+        listHtml += `
+            <div class="status-entry problem-list"
+                data-user="${h.user}"
+                data-problem="${h.problemId}"
+                data-result="${h.result}">
+                <ul><li>
                     ${deleteBtn}
                     <b>${h.user}</b> - 문제 ${h.problemId} -
                     <span style="color:${resultColor};font-weight:bold;">${h.result}</span>
                     <br><small>${h.time}</small>
                     ${codeBtn}
-                </li>
-            `;
-        });
+                </li></ul>
+            </div>
+        `;
+    });
+    listHtml += `</div>`;
 
-        html += '</ul></div>';
-        return html;
-    },
+    return `<h2>채점 현황</h2>${filterHtml}${listHtml}`;
+},
     cssClass: 'problem-list'
 },
     
@@ -1335,8 +1338,9 @@ function buildStatusTab(problemId) {
         `;
 
         history.forEach(h => {
+            const isHighlight = h.isNew ? 'background:#fff9c4;' : '';
             html += `
-               <tr>
+               <tr style="${isHighlight}">
                     <td style="padding:10px;">
                         ${h.user}
                     </td>
@@ -1405,11 +1409,17 @@ def input(p=''): return input_data.pop(0) if input_data else ""
             if (passCount === cases.length) {
                 saveSubmission(problemId, '맞았습니다');
                 resultBox.className = 'correct';
-                resultBox.innerText = "✅ 맞았습니다! 모든 테스트 통과!";
+                resultBox.innerText = "✅ 맞았습니다! 채점현황으로 이동합니다...";
+                const newPath1 = `/problems/${problemId}/status`;
+                history.pushState({ path: newPath1 }, '', `#${newPath1}`);
+                setTimeout(() => renderPage(newPath1), 400);
             } else {
                 saveSubmission(problemId, '틀렸습니다');
                 resultBox.className = 'wrong';
-                resultBox.innerText = `❌ 틀렸습니다. (${passCount}/${cases.length} 통과)`;
+                resultBox.innerText = `❌ 틀렸습니다. 채점현황으로 이동합니다...`;
+                const newPath2 = `/problems/${problemId}/status`;
+                history.pushState({ path: newPath2 }, '', `#${newPath2}`);
+                setTimeout(() => renderPage(newPath2), 400);
             }
         } catch (err) {
             resultBox.className = 'wrong';
@@ -1435,8 +1445,9 @@ def input(p=''): return input_data.pop(0) if input_data else ""
             user: session.id,
             problemId,
             result,
-            code: userCode,  // ← 추가
-            time: new Date().toLocaleString()
+            code: userCode,
+            time: new Date().toLocaleString(),
+            isNew: true   // ← 추가
         };
         db.ref('submissions').push(entry);
         const history = getSubmissionHistory();
@@ -1511,28 +1522,41 @@ def input(p=''): return input_data.pop(0) if input_data else ""
                     <div class="problem-list"><ul>
                 `;
 
-                if (history.length === 0) {
-                    html += `<p>제출 기록이 없습니다.</p>`;
-                } else {
-                    history.forEach(h => {
-                        const title = problemData[h.problemId]?.title || `문제 ${h.problemId}`;
-                        // ★ 관리자만 코드 보기
-                        const codeSection = isAdmin && h.code ? `
-                            <details style="margin-top:6px;">
-                                <summary style="cursor:pointer;font-size:12px;color:#808080;">코드 보기</summary>
-                                <pre style="background:#1e1e2e;color:#cdd6f4;padding:10px;border-radius:6px;font-size:12px;margin-top:4px;overflow-x:auto;">${h.code.replace(/</g,'&lt;')}</pre>
-                            </details>
-                        ` : '';
-                        html += `
-                            <li>
-                                <b>${title}</b><br>
-                                결과: <span style="color:${h.result === '맞았습니다' ? 'green' : 'red'};font-weight:bold;">${h.result}</span>
-                                <br>시간: ${h.time}
-                                ${codeSection}
-                            </li>
-                        `;
-                    });
-                }
+                // 기존 history.forEach(...) 전체를 아래로 교체
+if (history.length === 0) {
+    html += `<p>제출 기록이 없습니다.</p>`;
+} else {
+    const problemIds = [...new Set(history.map(h => h.problemId))];
+
+    problemIds.forEach(pid => {
+        const entries = history.filter(h => h.problemId === pid);
+
+        // 정답: 가장 최근 1개만
+        const correctEntries = entries.filter(h => h.result === '맞았습니다').slice(0, 1);
+        // 오답: 전부 (최근순)
+        const wrongEntries = entries.filter(h => h.result === '틀렸습니다');
+
+        const toShow = correctEntries.length > 0 ? correctEntries : wrongEntries;
+
+        toShow.forEach(h => {
+            const title = problemData[h.problemId]?.title || `문제 ${h.problemId}`;
+            const codeSection = isAdmin && h.code ? `
+                <details style="margin-top:6px;">
+                    <summary style="cursor:pointer;font-size:12px;color:#808080;">코드 보기</summary>
+                    <pre style="background:#1e1e2e;color:#cdd6f4;padding:10px;border-radius:6px;font-size:12px;margin-top:4px;overflow-x:auto;">${h.code.replace(/</g,'&lt;')}</pre>
+                </details>
+            ` : '';
+            html += `
+                <li>
+                    <b>${title}</b><br>
+                    결과: <span style="color:${h.result === '맞았습니다' ? 'green' : 'red'};font-weight:bold;">${h.result}</span>
+                    <br>시간: ${h.time}
+                    ${codeSection}
+                </li>
+            `;
+        });
+    });
+}
                 html += `</ul></div>`;
                 return html;
             }
@@ -1575,6 +1599,11 @@ if (!route && path.startsWith('/problems/')) {
         }
 
         if (route) {
+            setTimeout(() => {
+                const history = getSubmissionHistory();
+                history.forEach(h => delete h.isNew);
+                localStorage.setItem('submission_history', JSON.stringify(history));
+            }, 3000); // 3초 후 하이라이트 제거
             mainContent.innerHTML = route.contentGenerator ? route.contentGenerator() : route.content;
             document.title = route.title;
             if (route.cssClass) mainContent.classList.add(route.cssClass);
@@ -1733,6 +1762,25 @@ if (!route && path.startsWith('/problems/')) {
             group.style.display = group.dataset.cat === cat ? 'block' : 'none';
         });
     }
+}
+        function applyStatusFilter() {
+    const user    = document.getElementById('filter-user')?.value    || '';
+    const problem = document.getElementById('filter-problem')?.value || '';
+    const correct = document.getElementById('filter-correct')?.checked;
+    const wrong   = document.getElementById('filter-wrong')?.checked;
+
+    document.querySelectorAll('.status-entry').forEach(el => {
+        const matchUser    = !user    || el.dataset.user    === user;
+        const matchProblem = !problem || el.dataset.problem === problem;
+        const result       = el.dataset.result;
+
+        let matchResult = true;
+        if (correct && wrong) matchResult = true;           // 둘 다 체크 = 전부
+        else if (correct)     matchResult = result === '맞았습니다';
+        else if (wrong)       matchResult = result === '틀렸습니다';
+
+        el.style.display = (matchUser && matchProblem && matchResult) ? '' : 'none';
+    });
 }
     </script>
 </body>
