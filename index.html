@@ -390,34 +390,34 @@
     function getTier(userId, score) {
         if (ADMINS.includes(userId)) return { name: 'Grandmaster', color: '#c0392b', img: '그랜드마스터 URL', rank: 99 };
 
-        const tiers = [
-            { name: 'Bronze V',   min: 29,   color: '#cd7f32' },
-            { name: 'Bronze IV',  min: 59,   color: '#cd7f32' },
-            { name: 'Bronze III', min: 89,  color: '#cd7f32' },
-            { name: 'Bronze II',  min: 119,  color: '#cd7f32' },
-            { name: 'Bronze I',   min: 149,  color: '#cd7f32' },
-            { name: 'Silver V',   min: 199,  color: '#a0a0a0' },
-            { name: 'Silver IV',  min: 249,  color: '#a0a0a0' },
-            { name: 'Silver III', min: 299,  color: '#a0a0a0' },
-            { name: 'Silver II',  min: 349,  color: '#a0a0a0' },
-            { name: 'Silver I',   min: 299,  color: '#a0a0a0' },
-            { name: 'Gold V',     min: 499,  color: '#f1c40f' },
-            { name: 'Gold IV',    min: 599,  color: '#f1c40f' },
-            { name: 'Gold III',   min: 699,  color: '#f1c40f' },
-            { name: 'Gold II',    min: 799,  color: '#f1c40f' },
-            { name: 'Gold I',     min: 949, color: '#f1c40f' },
-            { name: 'Platinum V', min: 1099, color: '#00c8ff' },
-            { name: 'Platinum IV',min: 1249, color: '#00c8ff' },
-            { name: 'Platinum III',min:1399, color: '#00c8ff' },
-            { name: 'Platinum II',min: 1549, color: '#00c8ff' },
-            { name: 'Platinum I', min: 1749, color: '#00c8ff' },
-            { name: 'Master V',   min: 1949, color: '#9b59b6' },
-            { name: 'Master IV',  min: 2149, color: '#9b59b6' },
-            { name: 'Master III', min: 2349, color: '#9b59b6' },
-            { name: 'Master II',  min: 2539, color: '#9b59b6' },
-            { name: 'Master I',   min: 2699, color: '#9b59b6' },
-        ];
-
+        // getTier 함수의 tiers 배열을 아래로 교체
+const tiers = [
+    { name: 'Bronze V',    min: 0,   color: '#cd7f32' },
+    { name: 'Bronze IV',   min: 5,   color: '#cd7f32' },
+    { name: 'Bronze III',  min: 10,  color: '#cd7f32' },
+    { name: 'Bronze II',   min: 15,  color: '#cd7f32' },
+    { name: 'Bronze I',    min: 20,  color: '#cd7f32' },
+    { name: 'Silver V',    min: 25,  color: '#a0a0a0' },
+    { name: 'Silver IV',   min: 32,  color: '#a0a0a0' },
+    { name: 'Silver III',  min: 39,  color: '#a0a0a0' },
+    { name: 'Silver II',   min: 46,  color: '#a0a0a0' },
+    { name: 'Silver I',    min: 53,  color: '#a0a0a0' },
+    { name: 'Gold V',      min: 60,  color: '#f1c40f' },
+    { name: 'Gold IV',     min: 70,  color: '#f1c40f' },
+    { name: 'Gold III',    min: 80,  color: '#f1c40f' },
+    { name: 'Gold II',     min: 90,  color: '#f1c40f' },
+    { name: 'Gold I',      min: 100, color: '#f1c40f' },
+    { name: 'Platinum V',  min: 110, color: '#00c8ff' },
+    { name: 'Platinum IV', min: 125, color: '#00c8ff' },
+    { name: 'Platinum III',min: 140, color: '#00c8ff' },
+    { name: 'Platinum II', min: 155, color: '#00c8ff' },
+    { name: 'Platinum I',  min: 170, color: '#00c8ff' },
+    { name: 'Master V',    min: 185, color: '#9b59b6' },
+    { name: 'Master IV',   min: 205, color: '#9b59b6' },
+    { name: 'Master III',  min: 225, color: '#9b59b6' },
+    { name: 'Master II',   min: 245, color: '#9b59b6' },
+    { name: 'Master I',    min: 265, color: '#9b59b6' },
+];
 
         let result = tiers[0];
         for (const t of tiers) {
@@ -485,81 +485,93 @@ function getUserScore(userId) {
 
         return true;
     }
-    function clearAllHistory() {
-        if (!ADMINS.includes(getSession()?.id)) return alert('관리자만 가능합니다.');
-        if (!confirm('전체 기록을 삭제할까요?')) return;
+    // ── 전체 삭제 ──
+function clearAllHistory() {
+    if (!ADMINS.includes(getSession()?.id)) return alert('관리자만 가능합니다.');
+    if (!confirm('전체 기록을 삭제할까요?')) return;
 
-        db.ref('submissions').remove().then(() => {
-            localStorage.removeItem('submission_history');
-            alert('전체 삭제 완료');
-            renderPage(location.hash.substring(1) || '');
+    // 즉시 UI 제거
+    document.querySelectorAll('.status-entry').forEach(el => el.remove());
+
+    db.ref('submissions').remove().then(() => {
+        localStorage.removeItem('submission_history');
+    });
+}
+
+// ── 유저별 삭제 ──
+function clearUserHistory(userId) {
+    if (!ADMINS.includes(getSession()?.id)) return alert('관리자만 가능합니다.');
+    if (!confirm(`${userId}님의 기록을 삭제할까요?`)) return;
+
+    // 즉시 UI 제거
+    document.querySelectorAll(`.status-entry[data-user="${userId}"]`).forEach(el => el.remove());
+
+    db.ref('submissions').once('value').then(snapshot => {
+        const data = snapshot.val();
+        if (!data) return;
+        const updates = {};
+        Object.entries(data).forEach(([key, val]) => {
+            if (val.user === userId) updates[key] = null;
         });
-    }
-    function clearUserHistory(userId) {
-        if (!ADMINS.includes(getSession()?.id)) return alert('관리자만 가능합니다.');
-        if (!confirm(`${userId}님의 기록을 삭제할까요?`)) return;
+        db.ref('submissions').update(updates).then(() => {
+            const local = getSubmissionHistory().filter(h => h.user !== userId);
+            localStorage.setItem('submission_history', JSON.stringify(local));
+        });
+    });
+}
 
-        db.ref('submissions').once('value').then(snapshot => {
-            const data = snapshot.val();
-            if (!data) return;
-            const updates = {};
-            Object.entries(data).forEach(([key, val]) => {
-                if (val.user === userId) updates[key] = null;
-            });
-            db.ref('submissions').update(updates).then(() => {
-                const local = getSubmissionHistory().filter(h => h.user !== userId);
+// ── 문제별 삭제 ──
+function clearProblemHistory(problemId) {
+    if (!ADMINS.includes(getSession()?.id)) return alert('관리자만 가능합니다.');
+    if (!confirm(`문제 ${problemId}번 기록을 삭제할까요?`)) return;
+
+    // 즉시 UI 제거
+    document.querySelectorAll(`.status-entry[data-problem="${problemId}"]`).forEach(el => el.remove());
+
+    db.ref('submissions').once('value').then(snapshot => {
+        const data = snapshot.val();
+        if (!data) return;
+        const updates = {};
+        Object.entries(data).forEach(([key, val]) => {
+            if (String(val.problemId) === String(problemId)) updates[key] = null;
+        });
+        db.ref('submissions').update(updates).then(() => {
+            const local = getSubmissionHistory().filter(h => String(h.problemId) !== String(problemId));
+            localStorage.setItem('submission_history', JSON.stringify(local));
+        });
+    });
+}
+
+// ── 항목 하나 삭제 ──
+function deleteOneEntry(localIdx) {
+    if (!ADMINS.includes(getSession()?.id)) return alert('관리자만 가능합니다.');
+    if (!confirm('이 기록을 삭제할까요?')) return;
+
+    const local = getSubmissionHistory();
+    const target = local[localIdx];
+    if (!target) return;
+
+    // 즉시 UI 제거 (data-idx 속성으로 찾기)
+    const entryEl = document.querySelector(`.status-entry[data-idx="${localIdx}"]`);
+    if (entryEl) entryEl.remove();
+
+    db.ref('submissions').once('value').then(snapshot => {
+        const data = snapshot.val();
+        if (!data) return;
+        const matchKey = Object.entries(data).find(([, val]) =>
+            val.user === target.user &&
+            val.problemId === target.problemId &&
+            val.time === target.time
+        )?.[0];
+
+        if (matchKey) {
+            db.ref(`submissions/${matchKey}`).remove().then(() => {
+                local.splice(localIdx, 1);
                 localStorage.setItem('submission_history', JSON.stringify(local));
-                alert(`${userId} 삭제 완료`);
-                renderPage(location.hash.substring(1) || '');
             });
-        });
-    }
-    function clearProblemHistory(problemId) {
-        if (!ADMINS.includes(getSession()?.id)) return alert('관리자만 가능합니다.');
-        if (!confirm(`문제 ${problemId}번 기록을 삭제할까요?`)) return;
-
-        db.ref('submissions').once('value').then(snapshot => {
-            const data = snapshot.val();
-            if (!data) return;
-            const updates = {};
-            Object.entries(data).forEach(([key, val]) => {
-                if (String(val.problemId) === String(problemId)) updates[key] = null;
-            });
-            db.ref('submissions').update(updates).then(() => {
-                const local = getSubmissionHistory().filter(h => String(h.problemId) !== String(problemId));
-                localStorage.setItem('submission_history', JSON.stringify(local));
-                alert(`문제 ${problemId}번 삭제 완료`);
-                renderPage(location.hash.substring(1) || '');
-            });
-        });
-    }
-    function deleteOneEntry(localIdx) {
-        if (!ADMINS.includes(getSession()?.id)) return alert('관리자만 가능합니다.');
-        if (!confirm('이 기록을 삭제할까요?')) return;
-
-        const local = getSubmissionHistory();
-        const target = local[localIdx];
-        if (!target) return;
-
-        // Firebase에서 일치하는 항목 찾아 삭제
-        db.ref('submissions').once('value').then(snapshot => {
-            const data = snapshot.val();
-            if (!data) return;
-            const matchKey = Object.entries(data).find(([, val]) =>
-                val.user === target.user &&
-                val.problemId === target.problemId &&
-                val.time === target.time
-            )?.[0];
-
-            if (matchKey) {
-                db.ref(`submissions/${matchKey}`).remove().then(() => {
-                    local.splice(localIdx, 1);
-                    localStorage.setItem('submission_history', JSON.stringify(local));
-                    renderPage(location.hash.substring(1) || '');
-                });
-            }
-        });
-    }
+        }
+    });
+}
     // ── 세션 관리 ──
     function getSession() {
         try { return JSON.parse(sessionStorage.getItem('oj_session')); } catch { return null; }
@@ -1010,71 +1022,93 @@ setTimeout(() => filterCat('전체'), 0);
         '/status': {
     title: '채점 현황',
     contentGenerator: () => {
-    const history = getSubmissionHistory();
-    const isAdmin = ADMINS.includes(getSession()?.id);
+        const history = getSubmissionHistory();
+        const isAdmin = ADMINS.includes(getSession()?.id);
 
-    if (history.length === 0) return '<h2>채점 현황</h2><p>아직 제출이 없습니다.</p>';
+        if (history.length === 0) return '<h2>채점 현황</h2><p>아직 제출이 없습니다.</p>';
 
-    const users    = [...new Set(history.map(h => h.user))];
-    const problems = [...new Set(history.map(h => h.problemId))];
+        const users    = [...new Set(history.map(h => h.user))];
+        const problems = [...new Set(history.map(h => h.problemId))];
 
-    // 필터 UI (관리자만)
-    let filterHtml = '';
-    if (isAdmin) {
-        filterHtml = `
-        <div style="background:#f5f5f5;border-radius:12px;padding:16px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-            <select id="filter-user" onchange="applyStatusFilter()"
-                style="padding:8px;border-radius:8px;border:1px solid #ddd;">
-                <option value="">👤 전체 유저</option>
-                ${users.map(u => `<option value="${u}">${u}</option>`).join('')}
-            </select>
-            <select id="filter-problem" onchange="applyStatusFilter()"
-                style="padding:8px;border-radius:8px;border:1px solid #ddd;">
-                <option value="">📝 전체 문제</option>
-                ${problems.map(p => `<option value="${p}">문제 ${p}번</option>`).join('')}
-            </select>
-            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
-                <input type="checkbox" id="filter-correct" onchange="applyStatusFilter()"> ✅ 정답만
-            </label>
-            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
-                <input type="checkbox" id="filter-wrong" onchange="applyStatusFilter()"> ❌ 오답만
-            </label>
-            <button onclick="clearAllHistory()"
-                style="background:#e53935;color:white;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;margin-left:auto;">
-                🗑 전체 삭제
-            </button>
-        </div>
-        `;
-    }
-
-    let listHtml = `<div id="status-list">`;
-    history.forEach((h, idx) => {
-        const resultColor = h.result === '맞았습니다' ? '#2e7d32' : '#c62828';
-        const deleteBtn = isAdmin
-            ? `<button onclick="deleteOneEntry(${idx})" style="float:right;background:#eee;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;">삭제</button>`
-            : '';
-        const codeBtn = isAdmin && h.code
-            ? `<details style="margin-top:6px;"><summary style="cursor:pointer;font-size:12px;color:#808080;">코드 보기</summary><pre style="background:#1e1e2e;color:#cdd6f4;padding:10px;border-radius:6px;font-size:12px;margin-top:4px;overflow-x:auto;">${h.code.replace(/</g,'&lt;')}</pre></details>`
-            : '';
-        listHtml += `
-            <div class="status-entry problem-list"
-                data-user="${h.user}"
-                data-problem="${h.problemId}"
-                data-result="${h.result}">
-                <ul><li>
-                    ${deleteBtn}
-                    <b>${h.user}</b> - 문제 ${h.problemId} -
-                    <span style="color:${resultColor};font-weight:bold;">${h.result}</span>
-                    <br><small>${h.time}</small>
-                    ${codeBtn}
-                </li></ul>
+        let filterHtml = '';
+        if (isAdmin) {
+            filterHtml = `
+            <div style="background:#f5f5f5;border-radius:12px;padding:16px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+                <select id="filter-user" onchange="applyStatusFilter()"
+                    style="padding:8px;border-radius:8px;border:1px solid #ddd;">
+                    <option value="">👤 전체 유저</option>
+                    ${users.map(u => `<option value="${u}">${u}</option>`).join('')}
+                </select>
+                <select id="filter-problem" onchange="applyStatusFilter()"
+                    style="padding:8px;border-radius:8px;border:1px solid #ddd;">
+                    <option value="">📝 전체 문제</option>
+                    ${problems.map(p => `<option value="${p}">문제 ${p}번</option>`).join('')}
+                </select>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                    <input type="checkbox" id="filter-correct" onchange="applyStatusFilter()"> ✅ 정답만
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                    <input type="checkbox" id="filter-wrong" onchange="applyStatusFilter()"> ❌ 오답만
+                </label>
+                <button onclick="clearAllHistory()"
+                    style="background:#e53935;color:white;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;margin-left:auto;">
+                    🗑 전체 삭제
+                </button>
             </div>
-        `;
-    });
-    listHtml += `</div>`;
 
-    return `<h2>채점 현황</h2>${filterHtml}${listHtml}`;
-},
+            <!-- ★ 유저별 / 문제별 삭제 버튼 영역 -->
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+                <div style="width:100%;font-size:13px;font-weight:bold;color:#555;margin-bottom:4px;">👤 유저별 삭제</div>
+                ${users.map(u => `
+                    <button onclick="clearUserHistory('${u}')"
+                        style="padding:6px 14px;background:#fff3e0;border:1px solid #ffb74d;color:#e65100;
+                               border-radius:20px;cursor:pointer;font-size:13px;font-weight:bold;">
+                        ${u} 🗑
+                    </button>
+                `).join('')}
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+                <div style="width:100%;font-size:13px;font-weight:bold;color:#555;margin-bottom:4px;">📝 문제별 삭제</div>
+                ${problems.map(p => `
+                    <button onclick="clearProblemHistory('${p}')"
+                        style="padding:6px 14px;background:#fce4ec;border:1px solid #ef9a9a;color:#b71c1c;
+                               border-radius:20px;cursor:pointer;font-size:13px;font-weight:bold;">
+                        문제 ${p}번 🗑
+                    </button>
+                `).join('')}
+            </div>
+            `;
+        }
+
+        let listHtml = `<div id="status-list">`;
+        history.forEach((h, idx) => {
+            const resultColor = h.result === '맞았습니다' ? '#2e7d32' : '#c62828';
+            const deleteBtn = isAdmin
+                ? `<button onclick="deleteOneEntry(${idx})" style="float:right;background:#eee;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;">삭제</button>`
+                : '';
+            const codeBtn = isAdmin && h.code
+                ? `<details style="margin-top:6px;"><summary style="cursor:pointer;font-size:12px;color:#808080;">코드 보기</summary><pre style="background:#1e1e2e;color:#cdd6f4;padding:10px;border-radius:6px;font-size:12px;margin-top:4px;overflow-x:auto;">${h.code.replace(/</g,'&lt;')}</pre></details>`
+                : '';
+            listHtml += `
+                <div class="status-entry problem-list"
+                    data-idx="${idx}"
+                    data-user="${h.user}"
+                    data-problem="${h.problemId}"
+                    data-result="${h.result}">
+                    <ul><li>
+                        ${deleteBtn}
+                        <b>${h.user}</b> - 문제 ${h.problemId} -
+                        <span style="color:${resultColor};font-weight:bold;">${h.result}</span>
+                        <br><small>${h.time}</small>
+                        ${codeBtn}
+                    </li></ul>
+                </div>
+            `;
+        });
+        listHtml += `</div>`;
+
+        return `<h2>채점 현황</h2>${filterHtml}${listHtml}`;
+    },
     cssClass: 'problem-list'
 },
     
