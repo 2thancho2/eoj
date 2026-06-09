@@ -925,6 +925,18 @@ function deleteOneEntry(localIdx) {
                 { input: '10', expected: '3628800' },
             ]
         },
+        '23': {
+            title: '#23: counting stars - 비오',
+            category:'실전',
+            score: 5,
+            content: '<p><b>"counting stars</b></p><p><b>밤하늘의 펄"</b></p><p>다음은 가수 비오의 couting stars 가사이다</p><p>한 정수를 입력받았을때 다음과 같은 모양의 별모양을 출력하시오</p><hr><pre><code>예시 입력:\n5\n예시 출력:\n*\n**\n***\n****\n*****</code></pre>',
+            testCases: [
+                { input: '1', expected: '*' },
+                { input: '5', expected: '*\n**\n***\n****\n*****' },
+                { input: '2', expected: '*\n**' },
+                { input: '4', expected: '*\n**\n***\n****' },
+            ]
+        },
     };
 
     const routes = {
