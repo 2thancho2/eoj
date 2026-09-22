@@ -1431,17 +1431,99 @@ function buildStatusTab(problemId) {
 
         return html;
     }
+    function detectAISuspicion(code) {
+    let score = 0;
+    const reasons = [];
 
+    const lines = code.split('\n');
+    const nonEmptyLines = lines.filter(l => l.trim() !== '');
+    const commentLines = lines.filter(l => l.trim().startsWith('#'));
+    const hasComment = commentLines.length > 0;
+
+    // ── 즉시 차단 조건: solve/count/main 함수명 + 주석 존재 ──
+    const hasSuspiciousFuncName = /def\s+(solve|count|main)\s*\(/.test(code);
+    if (hasSuspiciousFuncName && hasComment) {
+        return {
+            suspicious: true,
+            score: 999,
+            reasons: ['함수명(solve/count/main) + 주석 조합 (즉시 차단)']
+        };
+    }
+
+    // 1. docstring 사용
+    if (/"""[\s\S]*?"""|'''[\s\S]*?'''/.test(code)) {
+        score += 2; reasons.push('docstring 사용');
+    }
+
+    // 2. 타입 힌트
+    if (/def\s+\w+\([^)]*:\s*\w+/.test(code) || /->\s*\w+\s*:/.test(code)) {
+        score += 2; reasons.push('타입 힌트 사용');
+    }
+
+    // 3. __main__ 패턴
+    if (/if\s+__name__\s*==\s*['"]__main__['"]/.test(code)) {
+        score += 2; reasons.push('__main__ 패턴');
+    }
+
+    // 4. 과도한 주석 비율 (30% 이상)
+    if (nonEmptyLines.length >= 4 && commentLines.length / nonEmptyLines.length > 0.3) {
+        score += 2; reasons.push('과도한 주석 비율');
+    }
+
+    // 5. 간단한 문제에 예외처리
+    if (/try\s*:/.test(code) && /except/.test(code)) {
+        score += 1; reasons.push('불필요한 예외처리');
+    }
+
+    // 6. 전형적 함수명 (solve/count/main 단독, 주석 없어도 약한 신호로)
+    if (hasSuspiciousFuncName) {
+        score += 1; reasons.push('전형적 함수명(solve/count/main)');
+    }
+
+    // 7. 영어 주석 다수
+    const englishComments = (code.match(/#.*[a-zA-Z]{4,}/g) || []).length;
+    if (englishComments >= 2) { score += 1; reasons.push('영어 주석 다수'); }
+
+    // 8. 한 줄로 압축된 제어문 (if x: y / for i in range(n): print(i) 등)
+    const oneLinerControlFlow = lines.filter(l => {
+        const t = l.trim();
+        return /^(if|elif|for|while)\b.*:\s*\S/.test(t) && !/^if\s+__name__/.test(t);
+    });
+    if (oneLinerControlFlow.length >= 1) {
+        score += 2; reasons.push('한 줄로 압축된 제어문(if/for/while)');
+    }
+
+    // 9. print(..., end='') 등 세밀한 포맷 지정
+    if (/print\([^)]*end\s*=\s*['"]/.test(code)) {
+        score += 2; reasons.push("print(..., end='') 세밀한 포맷팅");
+    }
+
+    // 10. text = """...""" 형태의 멀티라인 문자열 변수 할당
+    if (/\w+\s*=\s*("""[\s\S]*?"""|'''[\s\S]*?''')/.test(code)) {
+        score += 2; reasons.push('멀티라인 문자열 변수 할당(text = """...""")');
+    }
+
+    return { suspicious: score >= 4, score, reasons };
+}
     // ── 채점 로직 ──
     async function judgeCode(problemId) {
         if (!isLoggedIn()) { openLoginModal(); return; }
 
-        const userCode = document.getElementById('output-input').value;
-        const resultBox = document.getElementById('result-box');
-        const submitBtn = document.getElementById('submit-btn');
-        const problem = problemData[problemId];
+    const userCode = document.getElementById('output-input').value;
+    const resultBox = document.getElementById('result-box');
+    const submitBtn = document.getElementById('submit-btn');
+    const problem = problemData[problemId];
 
-        if (!userCode.trim()) return alert("코드를 입력하세요!");
+    if (!userCode.trim()) return alert("코드를 입력하세요!");
+
+    // AI 작성 의심 코드 체크
+    const aiCheck = detectAISuspicion(userCode);
+    if (aiCheck.suspicious) {
+        resultBox.style.display = 'block';
+        resultBox.className = 'wrong';
+        resultBox.innerText = "⚠️ AI가 작성한 코드로 의심되어 제출이 처리되지 않았습니다.\n직접 작성한 코드로 다시 제출해주세요.";
+        return; // saveSubmission을 호출하지 않으므로 기록에 전혀 남지 않음
+    }
 
         if (!window.pyodide) {
             resultBox.style.display = 'block';
