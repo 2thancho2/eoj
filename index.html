@@ -449,50 +449,32 @@ function getUserScore(userId) {
         document.body.innerHTML = ""; // 또는 경고 표시
     }
     }, 500);
-    const ADMIN_PASSWORD = "iamadmin";
-    // ══════════════════════════════════════════
-    //  ★ 계정 목록 — 여기서 직접 수정하세요 ★
-    // ══════════════════════════════════════════
-    const ADMINS = ['최이든'];  // ← 관리자 아이디 목록
-    const ACCOUNTS = [
-        { id: '최이든',pw: 'iamadmin'   },
-        { id: '김민종', pw: '30808' },
-        //{ id: '박하준', pw: '30615' },
-        { id: '정준우', pw: '30525' },
-        //{ id: '박시완', pw: '30609' },
-        { id: '신지섭', pw: '30616' },
-        { id: '최지혁', pw: '20733' },
-        { id: '채유승', pw: '20132' },
-        { id: '전하성', pw: '30430' },
-        { id: '한정우', pw: '30130' },
-        { id: '이주원', pw: '10321' },
-        { id: '김다함', pw: '30403' },
-        { id: '김의찬', pw: '21011' },
-        //{ id: '박관률', pw: '30109' },
-        //{ id: '서원주', pw: '30911' },
-        //----2026 추가모집 인원 -----//
-        //{ id: '김규현', pw: '30903' },
-        { id: '오제헌', pw: '30916' },
-        //{ id: '안준언', pw: '30913' },
-        { id: '박건률', pw: '30907' },//보류
-        { id: '권민성', pw: '30901' },//보류
-        { id: '홍유찬', pw: '10330' },
-        { id: '은태경', pw: '10318' },
-        { id: '김민재', pw: '20811' },
-        // 필요한 만큼 추가하면 됩니다
-        // { id: 'newuser', pw: 'newpass' },
-    ];
-    // ══════════════════════════════════════════
-    function checkAdminPassword() {
-        const pw = prompt("관리자 비밀번호를 입력하세요");
+    let ADMIN_PASSWORD = "";
+let ADMINS = [];
+let ACCOUNTS = [];
 
-        if (pw !== ADMIN_PASSWORD) {
-            alert("비밀번호가 틀렸습니다.");
-            return false;
-        }
+function loadAuthData() {
+    return Promise.all([
+        db.ref('accounts').once('value').then(snap => {
+            const data = snap.val() || {};
+            ACCOUNTS = Object.entries(data).map(([id, pw]) => ({ id, pw: String(pw) }));
+        }),
+        db.ref('admins').once('value').then(snap => {
+            const data = snap.val();
+            ADMINS = Array.isArray(data) ? data : Object.values(data || {});
+        })
+    ]);
+}
 
-        return true;
+function checkAdminPassword() {
+    const pw = prompt("관리자 비밀번호를 입력하세요");
+    const myAccount = ACCOUNTS.find(a => a.id === getSession()?.id);
+    if (!myAccount || pw !== myAccount.pw) {
+        alert("비밀번호가 틀렸습니다.");
+        return false;
     }
+    return true;
+}
     // ── 전체 삭제 ──
 function clearAllHistory() {
     if (!ADMINS.includes(getSession()?.id)) return alert('관리자만 가능합니다.');
@@ -1761,9 +1743,10 @@ if (!route && path.startsWith('/problems/')) {
     });
 
     window.addEventListener('load', () => {
-        updateAuthUI();
+        loadAuthData().then(() => {
+    updateAuthUI();
 
-        const initialHash = location.hash.substring(1) || '';
+    const initialHash = location.hash.substring(1) || '';
 
         // 점수 먼저 불러온 다음에 렌더링
         db.ref('problemScores').once('value').then(snapshot => {
@@ -1774,13 +1757,14 @@ if (!route && path.startsWith('/problems/')) {
                 });
             }
             // 점수 다 불러온 후에 렌더링
-            renderPage(initialHash);
+                        renderPage(initialHash);
             if (initialHash.startsWith('/problems/') && initialHash.split('/').length === 2) {
                 history.replaceState({ path: `${initialHash}/problem` }, '', `#${initialHash}/problem`);
             } else {
                 history.replaceState({ path: initialHash }, '', `#${initialHash}`);
             }
         });
+    }); // loadAuthData().then( 닫기
     });
     function filterCat(cat) {
     // 버튼 스타일 토글
