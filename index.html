@@ -1243,10 +1243,10 @@ setTimeout(() => filterCat('전체'), 0);
                 return { userId, score, tier };
             }).sort((a, b) => b.score - a.score || a.userId.localeCompare(b.userId));
 
-            // admin은 별도로 최상단에
-            const adminEntry = rankData.find(r => ADMINS.includes(r.userId));
+                        // admin은 별도로 최상단에 (여러 명 가능)
+            const adminEntries = rankData.filter(r => ADMINS.includes(r.userId));
             const others = rankData.filter(r => !ADMINS.includes(r.userId));
-            const sorted = adminEntry ? [adminEntry, ...others] : others;
+            const sorted = [...adminEntries, ...others];
 
             if (sorted.length === 0) {
                 return '<h2>🏆 랭킹</h2><p>아직 제출 기록이 없습니다.</p>';
@@ -1294,25 +1294,25 @@ setTimeout(() => filterCat('전체'), 0);
             });
             if (currentTier) html += '</ul></div>';
 
-            // admin 별도 표시
-            if (adminEntry) {
-                html = `
-                    <h2>🏆 랭킹</h2>
+                        // admin 별도 표시 (여러 명 지원)
+            if (adminEntries.length > 0) {
+                const adminBadges = adminEntries.map(a => `
                     <div style="
                         background: linear-gradient(135deg,#7b0000,#c0392b);
                         color:white;
                         padding:16px 20px;
                         border-radius:12px;
-                        margin-bottom:20px;
+                        margin-bottom:10px;
                         display:flex;
                         align-items:center;
                         gap:12px;
                         font-size:17px;
                         font-weight:bold;
                     ">
-                        👑 Grandmaster &nbsp;|&nbsp; ${adminEntry.userId}
+                        👑 Grandmaster &nbsp;|&nbsp; ${a.userId}
                     </div>
-                ` + html.replace('<h2>🏆 랭킹</h2>', '');
+                `).join('');
+                html = `<h2>🏆 랭킹</h2>${adminBadges}` + html.replace('<h2>🏆 랭킹</h2>', '');
             }
 
             return html;
