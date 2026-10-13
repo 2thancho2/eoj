@@ -532,6 +532,27 @@ function clearProblemHistory(problemId) {
     });
 }
 
+function setEntryResult(localIdx, newResult) {
+    if (!ADMINS.includes(getSession()?.id)) return alert('관리자만 가능합니다.');
+    const local = getSubmissionHistory();
+    const target = local[localIdx];
+    if (!target) return;
+
+    db.ref('submissions').once('value').then(snapshot => {
+        const data = snapshot.val();
+        if (!data) return;
+        const matchKey = Object.entries(data).find(([, val]) =>
+            val.user === target.user &&
+            val.problemId === target.problemId &&
+            val.time === target.time
+        )?.[0];
+        if (!matchKey) return;
+        db.ref(`submissions/${matchKey}/result`).set(newResult).then(() => {
+            renderPage(location.hash.substring(1) || '');
+        });
+    });
+}
+        
 // ── 항목 하나 삭제 ──
 function deleteOneEntry(localIdx) {
     if (!ADMINS.includes(getSession()?.id)) return alert('관리자만 가능합니다.');
@@ -1007,6 +1028,7 @@ function deleteOneEntry(localIdx) {
             title: '파이게임 기본 코드',
             category:'실전',
             score: 5,
+            manual: true,
             content: '<p><a href="https://n.lrl.kr/zeKeSF">클릭</a></p><p><a href="https://2than.tistory.com/16">클릭</a></p>',
             testCases: [
             ]
@@ -1206,7 +1228,15 @@ setTimeout(() => filterCat('전체'), 0);
 
         let listHtml = `<div id="status-list">`;
         history.forEach((h, idx) => {
-            const resultColor = h.result === '맞았습니다' ? '#2e7d32' : '#c62828';
+            const resultColor =
+                h.result === '맞았습니다' ? '#2e7d32' :
+                h.result === '제출완료'   ? '#f57c00' : '#c62828';
+            const approveBtns = isAdmin && h.result === '제출완료' ? `
+                <button onclick="setEntryResult(${idx}, '맞았습니다')"
+                    style="background:#4caf50;color:white;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;margin-left:4px;">승인</button>
+                <button onclick="setEntryResult(${idx}, '틀렸습니다')"
+                    style="background:#e53935;color:white;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;margin-left:4px;">반려</button>
+            ` : '';
             const deleteBtn = isAdmin
                 ? `<button onclick="deleteOneEntry(${idx})" style="float:right;background:#eee;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;">삭제</button>`
                 : '';
@@ -1220,7 +1250,7 @@ setTimeout(() => filterCat('전체'), 0);
                     data-problem="${h.problemId}"
                     data-result="${h.result}">
                     <ul><li>
-                        ${deleteBtn}
+                        ${deleteBtn}${approveBtns}
                         <b>${h.user}</b> - 문제 ${h.problemId} -
                         <span style="color:${resultColor};font-weight:bold;">${h.result}</span>
                         <br><small>${h.time}</small>
@@ -1611,6 +1641,17 @@ function buildStatusTab(problemId) {
     const problem = problemData[problemId];
 
     if (!userCode.trim()) return alert("코드를 입력하세요!");
+
+    if (problem.manual) {
+        saveSubmission(problemId, '제출완료');
+        resultBox.style.display = 'block';
+        resultBox.className = 'correct';
+        resultBox.innerText = "📨 제출되었습니다! 관리자가 확인 후 점수가 반영됩니다.";
+        const p = `/problems/${problemId}/status`;
+        history.pushState({ path: p }, '', `#${p}`);
+        setTimeout(() => renderPage(p), 400);
+        return;
+    }
 
     // AI 작성 의심 코드 체크
     const aiCheck = detectAISuspicion(userCode);
